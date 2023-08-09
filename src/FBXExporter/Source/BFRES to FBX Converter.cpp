@@ -29,25 +29,25 @@ bool SaveDocument(FbxManager* pManager, FbxDocument* pDocument, const char* pFil
         // Write in fall back format if pEmbedMedia is true
         pFileFormat = pManager->GetIOPluginRegistry()->GetNativeWriterFormat();
 
-        if (!pEmbedMedia)
-        {
-            //Try to export in ASCII if possible
-            int lFormatIndex, lFormatCount = pManager->GetIOPluginRegistry()->GetWriterFormatCount();
-
-            for (lFormatIndex = 0; lFormatIndex < lFormatCount; lFormatIndex++)
-            {
-                if (pManager->GetIOPluginRegistry()->WriterIsFBX(lFormatIndex))
-                {
-                    FbxString lDesc = pManager->GetIOPluginRegistry()->GetWriterFormatDescription(lFormatIndex);
-                    const char* lASCII = "ascii";
-                    if (lDesc.Find(lASCII) >= 0)
-                    {
-                        pFileFormat = lFormatIndex;
-                        break;
-                    }
-                }
-            }
-        }
+        // if (!pEmbedMedia)
+        // {
+        //     //Try to export in ASCII if possible
+        //     int lFormatIndex, lFormatCount = pManager->GetIOPluginRegistry()->GetWriterFormatCount();
+        //
+        //     for (lFormatIndex = 0; lFormatIndex < lFormatCount; lFormatIndex++)
+        //     {
+        //         if (pManager->GetIOPluginRegistry()->WriterIsFBX(lFormatIndex))
+        //         {
+        //             FbxString lDesc = pManager->GetIOPluginRegistry()->GetWriterFormatDescription(lFormatIndex);
+        //             const char* lASCII = "ascii";
+        //             if (lDesc.Find(lASCII) >= 0)
+        //             {
+        //                 pFileFormat = lFormatIndex;
+        //                 break;
+        //             }
+        //         }
+        //     }
+        // }
     }
 
     // Set the export states. By default, the export states are always set to 
