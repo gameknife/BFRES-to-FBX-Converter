@@ -55,8 +55,8 @@ public:
     void WriteModel( FbxScene*& pScene, const FMDL& fmdl, uint32 fmdlIndex );
     void WriteSkeleton(FbxScene*& pScene, const FSKL& fskl, std::vector<BoneMetadata>& boneListInfos);
     void WriteShape(FbxScene*& pScene, const FSHP& fshp, std::vector<BoneMetadata>& boneListInfos, uint32 fmdlIndex);
-    void WriteMesh(FbxScene*& pScene, FbxNode*& pLodGroup, const FSHP& fshp, const LODMesh& lodMesh, std::vector<BoneMetadata>& boneListInfos, uint32 fmdlIndex);
-    void SetTexturesToMaterial(FbxScene*& pScene, const FSHP& fshp, FbxSurfacePhong* lMaterial, FbxLayerElementUV* lLayerElementUV0, FbxLayerElementUV* lLayerElementUV1, FbxLayerElementUV* lLayerElementUV2);
+    void WriteMesh(FbxSurfacePhong* lMaterial, FbxScene*& pScene, FbxNode*& pLodGroup, const FSHP& fshp, const LODMesh& lodMesh, std::vector<BoneMetadata>& boneListInfos, uint32 fmdlIndex);
+    void SetTexturesToMaterial(FbxScene*& pScene, FMAT* fmat, FbxSurfacePhong* lMaterial);
 
     void MapFacesToVertices( const LODMesh& lodMesh, FbxMesh* lMesh );
     void MapPolygonsToVertices(const LODMesh& lodMesh, FbxMesh* lMesh);

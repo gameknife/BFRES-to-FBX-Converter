@@ -115,6 +115,7 @@ enum class GX2TextureMapType
     Metalness,
     Roughness,
     SubSurfaceScattering,
+	Bake,
     eMAX
 };
 

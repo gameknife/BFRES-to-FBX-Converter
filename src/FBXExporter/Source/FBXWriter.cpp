@@ -24,49 +24,49 @@ void FBXWriter::CreateFBX(FbxScene*& pScene, const BFRES& bfres)
         WriteModel(pScene, bfres.fmdl[i], i);
     }
 
-    for( const Anim& anim : bfres.fska.anims )
+    for (const Anim& anim : bfres.fska.anims)
     {
-        WriteAnimations( pScene, anim );
+        WriteAnimations(pScene, anim);
     }
 }
 
 
 // -----------------------------------------------------------------------
 // -----------------------------------------------------------------------
-void FBXWriter::WriteAnimations( FbxScene*& pScene, const Anim& anim )
+void FBXWriter::WriteAnimations(FbxScene*& pScene, const Anim& anim)
 {
     // One AnimStack per animation
-    FbxAnimStack* pAnimStack = FbxAnimStack::Create( pScene, anim.m_szName.c_str() );
+    FbxAnimStack* pAnimStack = FbxAnimStack::Create(pScene, anim.m_szName.c_str());
 
     FbxString tempString = "Anim Stack: ";
     tempString += anim.m_szName.c_str();
     pAnimStack->Description = tempString;
 
     FbxTime fbxTime;
-    fbxTime.SetFrame( anim.m_cFrames, FbxTime::eFrames30 );
-    pAnimStack->LocalStop.Set( fbxTime );
+    fbxTime.SetFrame(anim.m_cFrames, FbxTime::eFrames30);
+    pAnimStack->LocalStop.Set(fbxTime);
 
     // One AnimLayer per AnimStack
     tempString = "Anim Layer: ";
     tempString += anim.m_szName.c_str();
-    FbxAnimLayer* pAnimLayer = FbxAnimLayer::Create( pScene, tempString );
-    pAnimStack->AddMember( pAnimLayer );
+    FbxAnimLayer* pAnimLayer = FbxAnimLayer::Create(pScene, tempString);
+    pAnimStack->AddMember(pAnimLayer);
 
-    for( const BoneAnim& boneAnim : anim.m_vBoneAnims )
+    for (const BoneAnim& boneAnim : anim.m_vBoneAnims)
     {
         // Get bone that matches boneAnim name
-        FbxNode* pBone = pScene->FindNodeByName( boneAnim.m_szName.c_str() );
-        assert( pBone );
-        if( pBone )
+        FbxNode* pBone = pScene->FindNodeByName(boneAnim.m_szName.c_str());
+        assert(pBone);
+        if (pBone)
         {
             // Curve Node for Bone Translation
-            CreateTranslationAnimCurveNode( pAnimLayer, pBone, boneAnim );
+            CreateTranslationAnimCurveNode(pAnimLayer, pBone, boneAnim);
 
             // Curve Node for Bone Rotation
-            CreateRotationAnimCurveNode( pAnimLayer, pBone, boneAnim );
+            CreateRotationAnimCurveNode(pAnimLayer, pBone, boneAnim);
 
             // Curve Node for Bone Scale
-            CreateScaleAnimCurveNode( pAnimLayer, pBone, boneAnim );
+            CreateScaleAnimCurveNode(pAnimLayer, pBone, boneAnim);
         }
     }
 }
@@ -74,80 +74,80 @@ void FBXWriter::WriteAnimations( FbxScene*& pScene, const Anim& anim )
 
 // -----------------------------------------------------------------------
 // -----------------------------------------------------------------------
-void FBXWriter::CreateScaleAnimCurveNode( FbxAnimLayer*& pAnimLayer, FbxNode*& pBone, const BoneAnim& boneAnim )
+void FBXWriter::CreateScaleAnimCurveNode(FbxAnimLayer*& pAnimLayer, FbxNode*& pBone, const BoneAnim& boneAnim)
 {
     // Add keyframes to X Channel
-    FbxAnimCurve* pXAnimCurve = pBone->LclScaling.GetCurve( pAnimLayer, FBXSDK_CURVENODE_COMPONENT_X, true );
-    AddKeyFramesToAnimCurve( pXAnimCurve, boneAnim.m_XSCA, AnimTrackType::eScale );
+    FbxAnimCurve* pXAnimCurve = pBone->LclScaling.GetCurve(pAnimLayer, FBXSDK_CURVENODE_COMPONENT_X, true);
+    AddKeyFramesToAnimCurve(pXAnimCurve, boneAnim.m_XSCA, AnimTrackType::eScale);
 
     // Add keyframes to Y Channel
-    FbxAnimCurve* pYAnimCurve = pBone->LclScaling.GetCurve( pAnimLayer, FBXSDK_CURVENODE_COMPONENT_Y, true );
-    AddKeyFramesToAnimCurve( pYAnimCurve, boneAnim.m_YSCA, AnimTrackType::eScale );
+    FbxAnimCurve* pYAnimCurve = pBone->LclScaling.GetCurve(pAnimLayer, FBXSDK_CURVENODE_COMPONENT_Y, true);
+    AddKeyFramesToAnimCurve(pYAnimCurve, boneAnim.m_YSCA, AnimTrackType::eScale);
 
     // Add keyframes to Z Channel
-    FbxAnimCurve* pZAnimCurve = pBone->LclScaling.GetCurve( pAnimLayer, FBXSDK_CURVENODE_COMPONENT_Z, true );
-    AddKeyFramesToAnimCurve( pZAnimCurve, boneAnim.m_ZSCA, AnimTrackType::eScale );
+    FbxAnimCurve* pZAnimCurve = pBone->LclScaling.GetCurve(pAnimLayer, FBXSDK_CURVENODE_COMPONENT_Z, true);
+    AddKeyFramesToAnimCurve(pZAnimCurve, boneAnim.m_ZSCA, AnimTrackType::eScale);
 }
 
 
 // -----------------------------------------------------------------------
 // -----------------------------------------------------------------------
-void FBXWriter::CreateRotationAnimCurveNode( FbxAnimLayer*& pAnimLayer, FbxNode*& pBone, const BoneAnim& boneAnim )
+void FBXWriter::CreateRotationAnimCurveNode(FbxAnimLayer*& pAnimLayer, FbxNode*& pBone, const BoneAnim& boneAnim)
 {
-    assert( boneAnim.m_eRotType == BoneAnim::AnimRotationType::EULER );
+    assert(boneAnim.m_eRotType == BoneAnim::AnimRotationType::EULER);
 
     // Add keyframes to X Channel
-    FbxAnimCurve* pXAnimCurve = pBone->LclRotation.GetCurve( pAnimLayer, FBXSDK_CURVENODE_COMPONENT_X, true );
-    AddKeyFramesToAnimCurve( pXAnimCurve, boneAnim.m_XROT, AnimTrackType::eRotation );
+    FbxAnimCurve* pXAnimCurve = pBone->LclRotation.GetCurve(pAnimLayer, FBXSDK_CURVENODE_COMPONENT_X, true);
+    AddKeyFramesToAnimCurve(pXAnimCurve, boneAnim.m_XROT, AnimTrackType::eRotation);
 
     // Add keyframes to Y Channel
-    FbxAnimCurve* pYAnimCurve = pBone->LclRotation.GetCurve( pAnimLayer, FBXSDK_CURVENODE_COMPONENT_Y, true );
-    AddKeyFramesToAnimCurve( pYAnimCurve, boneAnim.m_YROT, AnimTrackType::eRotation );
+    FbxAnimCurve* pYAnimCurve = pBone->LclRotation.GetCurve(pAnimLayer, FBXSDK_CURVENODE_COMPONENT_Y, true);
+    AddKeyFramesToAnimCurve(pYAnimCurve, boneAnim.m_YROT, AnimTrackType::eRotation);
 
     // Add keyframes to Z Channel
-    FbxAnimCurve* pZAnimCurve = pBone->LclRotation.GetCurve( pAnimLayer, FBXSDK_CURVENODE_COMPONENT_Z, true );
-    AddKeyFramesToAnimCurve( pZAnimCurve, boneAnim.m_ZROT, AnimTrackType::eRotation );
+    FbxAnimCurve* pZAnimCurve = pBone->LclRotation.GetCurve(pAnimLayer, FBXSDK_CURVENODE_COMPONENT_Z, true);
+    AddKeyFramesToAnimCurve(pZAnimCurve, boneAnim.m_ZROT, AnimTrackType::eRotation);
 }
 
 
 // -----------------------------------------------------------------------
 // -----------------------------------------------------------------------
-void FBXWriter::CreateTranslationAnimCurveNode( FbxAnimLayer*& pAnimLayer, FbxNode*& pBone, const BoneAnim& boneAnim )
+void FBXWriter::CreateTranslationAnimCurveNode(FbxAnimLayer*& pAnimLayer, FbxNode*& pBone, const BoneAnim& boneAnim)
 {
     // Add keyframes to X Channel
-    FbxAnimCurve* pXAnimCurve = pBone->LclTranslation.GetCurve( pAnimLayer, FBXSDK_CURVENODE_COMPONENT_X, true );
-    AddKeyFramesToAnimCurve( pXAnimCurve, boneAnim.m_XPOS, AnimTrackType::eTranslation );
+    FbxAnimCurve* pXAnimCurve = pBone->LclTranslation.GetCurve(pAnimLayer, FBXSDK_CURVENODE_COMPONENT_X, true);
+    AddKeyFramesToAnimCurve(pXAnimCurve, boneAnim.m_XPOS, AnimTrackType::eTranslation);
 
     // Add keyframes to Y Channel
-    FbxAnimCurve* pYAnimCurve = pBone->LclTranslation.GetCurve( pAnimLayer, FBXSDK_CURVENODE_COMPONENT_Y, true );
-    AddKeyFramesToAnimCurve( pYAnimCurve, boneAnim.m_YPOS, AnimTrackType::eTranslation );
+    FbxAnimCurve* pYAnimCurve = pBone->LclTranslation.GetCurve(pAnimLayer, FBXSDK_CURVENODE_COMPONENT_Y, true);
+    AddKeyFramesToAnimCurve(pYAnimCurve, boneAnim.m_YPOS, AnimTrackType::eTranslation);
 
     // Add keyframes to Z Channel
-    FbxAnimCurve* pZAnimCurve = pBone->LclTranslation.GetCurve( pAnimLayer, FBXSDK_CURVENODE_COMPONENT_Z, true );
-    AddKeyFramesToAnimCurve( pZAnimCurve, boneAnim.m_ZPOS, AnimTrackType::eTranslation );
+    FbxAnimCurve* pZAnimCurve = pBone->LclTranslation.GetCurve(pAnimLayer, FBXSDK_CURVENODE_COMPONENT_Z, true);
+    AddKeyFramesToAnimCurve(pZAnimCurve, boneAnim.m_ZPOS, AnimTrackType::eTranslation);
 }
 
 
 // -----------------------------------------------------------------------
 // -----------------------------------------------------------------------
-void FBXWriter::AddKeyFramesToAnimCurve( FbxAnimCurve*& pAnimCurve, const AnimTrack& animTrack, AnimTrackType animTrackType )
+void FBXWriter::AddKeyFramesToAnimCurve(FbxAnimCurve*& pAnimCurve, const AnimTrack& animTrack, AnimTrackType animTrackType)
 {
-    if( pAnimCurve && ( animTrack.m_cKeys > 0 ) )
+    if (pAnimCurve && (animTrack.m_cKeys > 0))
     {
-        assert( animTrack.m_eInterpolationType == AnimTrack::CurveInterpolationType::HERMITE );
+        assert(animTrack.m_eInterpolationType == AnimTrack::CurveInterpolationType::HERMITE);
         pAnimCurve->KeyModifyBegin();
-        for( uint32 i = 0; i < animTrack.m_cKeys; ++i )
+        for (uint32 i = 0; i < animTrack.m_cKeys; ++i)
         {
-            const KeyFrame& keyFrame = animTrack.m_vKeyFrames[ i ];
+            const KeyFrame& keyFrame = animTrack.m_vKeyFrames[i];
             FbxTime fbxTime;
-            fbxTime.SetFrame( keyFrame.m_uiFrame, FbxTime::eFrames30 );
-            uint32 uiKeyIndex = pAnimCurve->KeyAdd( fbxTime );
+            fbxTime.SetFrame(keyFrame.m_uiFrame, FbxTime::eFrames30);
+            uint32 uiKeyIndex = pAnimCurve->KeyAdd(fbxTime);
 
             float fValue = keyFrame.m_fValue;
-            if( animTrackType == AnimTrackType::eRotation )
-                fValue = ( float ) Math::ConvertRadiansToDegrees( fValue );
+            if (animTrackType == AnimTrackType::eRotation)
+                fValue = (float)Math::ConvertRadiansToDegrees(fValue);
 
-            pAnimCurve->KeySet( uiKeyIndex, fbxTime, fValue, FbxAnimCurveDef::eInterpolationCubic, FbxAnimCurveDef::eTangentAuto, keyFrame.m_fSlope1, keyFrame.m_fSlope2 );
+            pAnimCurve->KeySet(uiKeyIndex, fbxTime, fValue, FbxAnimCurveDef::eInterpolationCubic, FbxAnimCurveDef::eTangentAuto, keyFrame.m_fSlope1, keyFrame.m_fSlope2);
         }
         pAnimCurve->KeyModifyEnd();
     }
@@ -158,8 +158,8 @@ void FBXWriter::AddKeyFramesToAnimCurve( FbxAnimCurve*& pAnimCurve, const AnimTr
 // -----------------------------------------------------------------------
 void FBXWriter::WriteModel(FbxScene*& pScene, const FMDL& fmdl, uint32 fmdlIndex)
 {
-	// Create an array to store the smooth and rigid bone indices
-	std::vector<BoneMetadata> boneInfoList(fmdl.fskl.boneList.size());
+    // Create an array to store the smooth and rigid bone indices
+    std::vector<BoneMetadata> boneInfoList(fmdl.fskl.boneList.size());
 
     WriteSkeleton(pScene, fmdl.fskl, boneInfoList);
 
@@ -212,7 +212,7 @@ void FBXWriter::CreateBone(FbxScene*& pScene, const Bone& bone, FbxNode*& lBoneN
     else
     {
         // This FbxWriter doesn't support bone quaternion rotation yet
-        assert(0 && "FbxWriter doesn't support bone quaternion rotation yet" );
+        assert(0 && "FbxWriter doesn't support bone quaternion rotation yet");
     }
     FbxDouble3 fBonePos = FbxDouble3(bone.position.X, bone.position.Y, bone.position.Z);
     lBoneNode->LclTranslation.Set(fBonePos);
@@ -228,55 +228,77 @@ void FBXWriter::CreateBone(FbxScene*& pScene, const Bone& bone, FbxNode*& lBoneN
         lBone->SetSkeletonType(FbxSkeleton::eLimbNode);
     }
 
-    lBone->Size.Set( 0.03 );
+    lBone->Size.Set(0.03);
     // Set the node attribute of the bone node.
     lBoneNode->SetNodeAttribute(lBone);
 
-	// Add bone data to the bone info list
-	if (bone.useSmoothMatrix)
-	{
-		boneInfoList[bone.smoothMatrixIndex].uiBoneIndex   = bone.index;
-		boneInfoList[bone.smoothMatrixIndex].szName        = bone.name;
-		boneInfoList[bone.smoothMatrixIndex].eSkinningType = SkinningType::eSmooth;
-	}
-	if (bone.useRigidMatrix)
-	{
-		boneInfoList[bone.rigidMatrixIndex].uiBoneIndex   = bone.index;
-		boneInfoList[bone.rigidMatrixIndex].szName        = bone.name;
-		boneInfoList[bone.rigidMatrixIndex].eSkinningType = SkinningType::eRigid;
-	}
+    // Add bone data to the bone info list
+    if (bone.useSmoothMatrix)
+    {
+        boneInfoList[bone.smoothMatrixIndex].uiBoneIndex = bone.index;
+        boneInfoList[bone.smoothMatrixIndex].szName = bone.name;
+        boneInfoList[bone.smoothMatrixIndex].eSkinningType = SkinningType::eSmooth;
+    }
+    if (bone.useRigidMatrix)
+    {
+        boneInfoList[bone.rigidMatrixIndex].uiBoneIndex = bone.index;
+        boneInfoList[bone.rigidMatrixIndex].szName = bone.name;
+        boneInfoList[bone.rigidMatrixIndex].eSkinningType = SkinningType::eRigid;
+    }
 }
 
-
+std::map<std::string, FbxSurfacePhong*> g_MaterialMap;
 // -----------------------------------------------------------------------
 // -----------------------------------------------------------------------
 void FBXWriter::WriteShape(FbxScene*& pScene, const FSHP& fshp, std::vector<BoneMetadata>& boneListInfos, uint32 fmdlIndex)
 {
     std::string meshName = fshp.name + "_LODGroup";
-    FbxNode* lLodGroup = FbxNode::Create( pScene, meshName.c_str() );
-    FbxLODGroup* lLodGroupAttr = FbxLODGroup::Create( pScene, meshName.c_str() );
+    FbxNode* lLodGroup = FbxNode::Create(pScene, meshName.c_str());
+    FbxLODGroup* lLodGroupAttr = FbxLODGroup::Create(pScene, meshName.c_str());
     // Array lChildNodes contains geometries of all LOD levels
-	for( int j = 0; j < fshp.lodMeshes.size(); j++ )
+
+    // create the single material
+    FMAT* fmat = g_BFRESManager.GetMaterialByIndex(fshp.modelIndex, fshp.materialIndex);
+
+    std::string matName = fmat->name;
+
+    // add or get from materialmap
+    if (g_MaterialMap.find(matName) == g_MaterialMap.end())
     {
-        WriteMesh( pScene, lLodGroup, fshp, fshp.lodMeshes[ j ], boneListInfos, fmdlIndex );
+        FbxString lMaterialName = fmat->name.c_str();
+        FbxSurfacePhong* lMaterial = FbxSurfacePhong::Create(pScene, lMaterialName);
+
+        if (g_bWriteTextures)
+        {
+            // Get Material used for this mesh
+            SetTexturesToMaterial(pScene, fmat, lMaterial);
+        }
+        g_MaterialMap[matName] = lMaterial;
+    }
+
+    FbxSurfacePhong* lMaterial = g_MaterialMap[matName];
+
+    for (int j = 0; j < fshp.lodMeshes.size(); j++)
+    {
+        WriteMesh(lMaterial, pScene, lLodGroup, fshp, fshp.lodMeshes[j], boneListInfos, fmdlIndex);
         //lLodGroupAttr->AddDisplayLevel( FbxLODGroup::EDisplayLevel::eUseLOD );
         //lLodGroupAttr->AddThreshold( 500 * j );
-	}
-    lLodGroup->SetNodeAttribute( lLodGroupAttr );
-    pScene->GetRootNode()->AddChild( lLodGroup );
+    }
+    lLodGroup->SetNodeAttribute(lLodGroupAttr);
+    pScene->GetRootNode()->AddChild(lLodGroup);
 }
 
 
 // -----------------------------------------------------------------------
 // -----------------------------------------------------------------------
-void FBXWriter::WriteMesh(FbxScene*& pScene, FbxNode*& pLodGroup, const FSHP& fshp, const LODMesh& lodMesh, std::vector<BoneMetadata>& boneListInfos, uint32 fmdlIndex)
+void FBXWriter::WriteMesh(FbxSurfacePhong* lMaterial, FbxScene*& pScene, FbxNode*& pLodGroup, const FSHP& fshp, const LODMesh& lodMesh, std::vector<BoneMetadata>& boneListInfos, uint32 fmdlIndex)
 {
     bool hasSkeleton = boneListInfos.size() > 0;
 
     uint32 uiLODIndex = pLodGroup->GetChildCount();
     std::string meshName = fshp.name;
-    meshName += "_LOD" + std::to_string( uiLODIndex );
-	
+    meshName += "_LOD" + std::to_string(uiLODIndex);
+
     // Create a node for our mesh in the scene.
     FbxNode* lMeshNode = FbxNode::Create(pScene, meshName.c_str());
 
@@ -295,48 +317,48 @@ void FBXWriter::WriteMesh(FbxScene*& pScene, FbxNode*& pLodGroup, const FSHP& fs
     FbxVector4* lControlPoints = lMesh->GetControlPoints();
 
     //Create layer elements and set mapping modes and reference modes
-    FbxLayerElementNormal*      lLayerElementNormal   = FbxLayerElementNormal     ::Create( lMesh, "_n0"  );
-    FbxLayerElementUV*          lLayerElementUV0      = FbxLayerElementUV         ::Create( lMesh, "_uv0" );
-    FbxLayerElementUV*          lLayerElementUV1      = FbxLayerElementUV         ::Create( lMesh, "_uv1" );
-    FbxLayerElementUV*          lLayerElementUV2      = FbxLayerElementUV         ::Create( lMesh, "_uv2" );
-    FbxLayerElementTangent*     lLayerElementTangent  = FbxLayerElementTangent    ::Create( lMesh, "_t0"  );
-    FbxLayerElementBinormal*    lLayerElementBinormal = FbxLayerElementBinormal   ::Create( lMesh, "_b0"  );
-    FbxLayerElementVertexColor* lLayerElementCol0     = FbxLayerElementVertexColor::Create( lMesh, "_c0"  );
+    FbxLayerElementNormal* lLayerElementNormal = FbxLayerElementNormal::Create(lMesh, "_n0");
+    FbxLayerElementUV* lLayerElementUV0 = FbxLayerElementUV::Create(lMesh, "_uv0");
+    FbxLayerElementUV* lLayerElementUV1 = FbxLayerElementUV::Create(lMesh, "_uv1");
+    FbxLayerElementUV* lLayerElementUV2 = FbxLayerElementUV::Create(lMesh, "_uv2");
+    FbxLayerElementTangent* lLayerElementTangent = FbxLayerElementTangent::Create(lMesh, "_t0");
+    FbxLayerElementBinormal* lLayerElementBinormal = FbxLayerElementBinormal::Create(lMesh, "_b0");
+    FbxLayerElementVertexColor* lLayerElementCol0 = FbxLayerElementVertexColor::Create(lMesh, "_c0");
 
-    lLayerElementNormal  ->SetMappingMode( FbxLayerElement::eByControlPoint );
-    lLayerElementUV0     ->SetMappingMode( FbxLayerElement::eByControlPoint );
-    lLayerElementUV1     ->SetMappingMode( FbxLayerElement::eByControlPoint );
-    lLayerElementUV2     ->SetMappingMode( FbxLayerElement::eByControlPoint );
-    lLayerElementTangent ->SetMappingMode( FbxLayerElement::eByControlPoint );
-    lLayerElementBinormal->SetMappingMode( FbxLayerElement::eByControlPoint );
-    lLayerElementCol0    ->SetMappingMode( FbxLayerElement::eByControlPoint );
+    lLayerElementNormal->SetMappingMode(FbxLayerElement::eByControlPoint);
+    lLayerElementUV0->SetMappingMode(FbxLayerElement::eByControlPoint);
+    lLayerElementUV1->SetMappingMode(FbxLayerElement::eByControlPoint);
+    lLayerElementUV2->SetMappingMode(FbxLayerElement::eByControlPoint);
+    lLayerElementTangent->SetMappingMode(FbxLayerElement::eByControlPoint);
+    lLayerElementBinormal->SetMappingMode(FbxLayerElement::eByControlPoint);
+    lLayerElementCol0->SetMappingMode(FbxLayerElement::eByControlPoint);
 
-    lLayerElementNormal  ->SetReferenceMode( FbxLayerElement::eDirect );
-    lLayerElementUV0     ->SetReferenceMode( FbxLayerElement::eDirect );
-    lLayerElementUV1     ->SetReferenceMode( FbxLayerElement::eDirect );
-    lLayerElementUV2     ->SetReferenceMode( FbxLayerElement::eDirect );
-    lLayerElementTangent ->SetReferenceMode( FbxLayerElement::eDirect );
-    lLayerElementBinormal->SetReferenceMode( FbxLayerElement::eDirect );
-    lLayerElementCol0    ->SetReferenceMode( FbxLayerElement::eDirect );
+    lLayerElementNormal->SetReferenceMode(FbxLayerElement::eDirect);
+    lLayerElementUV0->SetReferenceMode(FbxLayerElement::eDirect);
+    lLayerElementUV1->SetReferenceMode(FbxLayerElement::eDirect);
+    lLayerElementUV2->SetReferenceMode(FbxLayerElement::eDirect);
+    lLayerElementTangent->SetReferenceMode(FbxLayerElement::eDirect);
+    lLayerElementBinormal->SetReferenceMode(FbxLayerElement::eDirect);
+    lLayerElementCol0->SetReferenceMode(FbxLayerElement::eDirect);
 
     std::map<uint32, SkinCluster> SkinClusterMap;
 
     for (uint32 i = 0; i < uiNumControlPoints; i++)
     {
-        const Math::vector3F& posVec = fshp.vertices[ i ].position0;
-        lControlPoints[ i ] = FbxVector4( posVec.X, posVec.Y, posVec.Z );
+        const Math::vector3F& posVec = fshp.vertices[i].position0;
+        lControlPoints[i] = FbxVector4(posVec.X, posVec.Y, posVec.Z);
 
-        const Math::vector3F& normalVec = fshp.vertices[ i ].normal;
-        lLayerElementNormal->GetDirectArray().Add( FbxVector4( normalVec.X, normalVec.Y, normalVec.Z ) );
+        const Math::vector3F& normalVec = fshp.vertices[i].normal;
+        lLayerElementNormal->GetDirectArray().Add(FbxVector4(normalVec.X, normalVec.Y, normalVec.Z));
 
 #if FLIP_UV_VERTICAL
-        const Math::vector2F& uv0Vec = fshp.vertices[ i ].uv0;
-        lLayerElementUV0->GetDirectArray().Add( FbxVector2( uv0Vec.X, 1 - uv0Vec.Y ) );
-        const Math::vector2F& uv1Vec = fshp.vertices[ i ].uv1;
-        lLayerElementUV1->GetDirectArray().Add( FbxVector2( uv1Vec.X, 1 - uv1Vec.Y ) );
-        const Math::vector2F& uv2Vec = fshp.vertices[ i ].uv2;
-        lLayerElementUV2->GetDirectArray().Add( FbxVector2( uv2Vec.X, 1 - uv2Vec.Y ) );
-#else 
+        const Math::vector2F& uv0Vec = fshp.vertices[i].uv0;
+        lLayerElementUV0->GetDirectArray().Add(FbxVector2(uv0Vec.X, 1 - uv0Vec.Y));
+        const Math::vector2F& uv1Vec = fshp.vertices[i].uv1;
+        lLayerElementUV1->GetDirectArray().Add(FbxVector2(uv1Vec.X, 1 - uv1Vec.Y));
+        const Math::vector2F& uv2Vec = fshp.vertices[i].uv2;
+        lLayerElementUV2->GetDirectArray().Add(FbxVector2(uv2Vec.X, 1 - uv2Vec.Y));
+#else
         const Math::vector2F& uv0Vec = fshp.vertices[ i ].uv0;
         lLayerElementUV0->GetDirectArray().Add( FbxVector2( uv0Vec.X, uv0Vec.Y ) );
         const Math::vector2F& uv1Vec = fshp.vertices[ i ].uv1;
@@ -345,17 +367,17 @@ void FBXWriter::WriteMesh(FbxScene*& pScene, FbxNode*& pLodGroup, const FSHP& fs
         lLayerElementUV2->GetDirectArray().Add( FbxVector2( uv2Vec.X, uv2Vec.Y ) );
 #endif
 
-        const Math::vector4F& tangentVec = fshp.vertices[ i ].tangent;
-        lLayerElementTangent->GetDirectArray().Add( FbxVector4( tangentVec.X, tangentVec.Y, tangentVec.Z, tangentVec.W ) );
+        const Math::vector4F& tangentVec = fshp.vertices[i].tangent;
+        lLayerElementTangent->GetDirectArray().Add(FbxVector4(tangentVec.X, tangentVec.Y, tangentVec.Z, tangentVec.W));
 
-        const Math::vector4F& binormalVec = fshp.vertices[ i ].binormal;
-        lLayerElementBinormal->GetDirectArray().Add( FbxVector4( binormalVec.X, binormalVec.Y, binormalVec.Z, binormalVec.W ) );
+        const Math::vector4F& binormalVec = fshp.vertices[i].binormal;
+        lLayerElementBinormal->GetDirectArray().Add(FbxVector4(binormalVec.X, binormalVec.Y, binormalVec.Z, binormalVec.W));
 
-        const Math::vector4F& col0Vec = fshp.vertices[ i ].color0;
-        lLayerElementCol0->GetDirectArray().Add( FbxVector4( col0Vec.X, col0Vec.Y, col0Vec.Z, col0Vec.W ) );
-        
+        const Math::vector4F& col0Vec = fshp.vertices[i].color0;
+        lLayerElementCol0->GetDirectArray().Add(FbxVector4(col0Vec.X, col0Vec.Y, col0Vec.Z, col0Vec.W));
+
         if (hasSkeleton)
-            CreateSkinClusterData(fshp.vertices[i], i, SkinClusterMap, boneListInfos, fshp);  // Convert the vertex-to-bone mapping to bone-to-vertex so it conforms with fbx cluster data
+            CreateSkinClusterData(fshp.vertices[i], i, SkinClusterMap, boneListInfos, fshp); // Convert the vertex-to-bone mapping to bone-to-vertex so it conforms with fbx cluster data
     }
 
     if (hasSkeleton)
@@ -364,58 +386,47 @@ void FBXWriter::WriteMesh(FbxScene*& pScene, FbxNode*& pLodGroup, const FSHP& fs
     // Create layer 0 for the mesh if it does not already exist.
     // This is where we will define our normals.
     FbxLayer* lLayer00 = lMesh->GetLayer(0);
-    if (lLayer00 == NULL) {
+    if (lLayer00 == NULL)
+    {
         lMesh->CreateLayer();
-        lLayer00 = lMesh->GetLayer( 0 );
+        lLayer00 = lMesh->GetLayer(0);
     }
-    lLayer00->SetNormals( lLayerElementNormal );
-    lLayer00->SetUVs( lLayerElementUV0, FbxLayerElement::eTextureDiffuse );
-    lLayer00->SetUVs( lLayerElementUV1, FbxLayerElement::eTextureNormalMap );
-    lLayer00->SetUVs( lLayerElementUV2, FbxLayerElement::eTextureTransparency ); // We dont know what this is used for
-    lLayer00->SetTangents( lLayerElementTangent );
-    lLayer00->SetBinormals( lLayerElementBinormal );
-    lLayer00->SetVertexColors( lLayerElementCol0 );
+    lLayer00->SetNormals(lLayerElementNormal);
+    lLayer00->SetUVs(lLayerElementUV0, FbxLayerElement::eTextureDiffuse);
+    lLayer00->SetUVs(lLayerElementUV1, FbxLayerElement::eTextureNormalMap);
+    lLayer00->SetUVs(lLayerElementUV2, FbxLayerElement::eTextureTransparency); // We dont know what this is used for
+    lLayer00->SetTangents(lLayerElementTangent);
+    lLayer00->SetBinormals(lLayerElementBinormal);
+    lLayer00->SetVertexColors(lLayerElementCol0);
 
     MapFacesToVertices(lodMesh, lMesh);
 
     // TODO set materials to an LOD group, not the mesh - fix the hack
-	// Set material mapping.
-	FbxGeometryElementMaterial* lMaterialElement = lMesh->CreateElementMaterial();
-	lMaterialElement->SetMappingMode(FbxGeometryElement::eByPolygon);
-	lMaterialElement->SetReferenceMode(FbxGeometryElement::eDirect);
+    // Set material mapping.
+    FbxGeometryElementMaterial* lMaterialElement = lMesh->CreateElementMaterial();
+    lMaterialElement->SetMappingMode(FbxGeometryElement::eByPolygon);
+    lMaterialElement->SetReferenceMode(FbxGeometryElement::eDirect);
 
     // HACK HACK HACK HACK HACK
-	if ( uiLODIndex == 0 )
-	{
-		FbxString lMaterialName = "M_";
-	    lMaterialName += fshp.name.c_str();
-	    FbxSurfacePhong* lMaterial = FbxSurfacePhong::Create(pScene, lMaterialName);
-		lMeshNode->AddMaterial(lMaterial);
-        lMeshNode->SetShadingMode( FbxNode::eTextureShading );
+    // gameknife, why dont write the lod more?
+    if (uiLODIndex == 0)
+    {
+    }
 
-        if ( g_bWriteTextures )
-        {
-            SetTexturesToMaterial( pScene, fshp, lMaterial, lLayerElementUV0, lLayerElementUV1, lLayerElementUV2 );
-        }
-        
-	}
-    
-
+    lMeshNode->AddMaterial(lMaterial);
+    lMeshNode->SetShadingMode(FbxNode::eTextureShading);
 
     // TODO move this function call into write animations
     WriteBindPose(pScene, lMeshNode);
 }
 
-
+std::map<std::string, FbxFileTexture*> g_TextureMap;
 // -----------------------------------------------------------------------
 // -----------------------------------------------------------------------
 // Currently as far as it will get. Certain things, like AO maps, are not
 // supported by FBX's Phong material as far as I can tell.
-void FBXWriter::SetTexturesToMaterial(FbxScene*& pScene, const FSHP& fshp, FbxSurfacePhong* lMaterial, FbxLayerElementUV* lLayerElementUV0, FbxLayerElementUV* lLayerElementUV1, FbxLayerElementUV* lLayerElementUV2)
+void FBXWriter::SetTexturesToMaterial(FbxScene*& pScene, FMAT* fmat, FbxSurfacePhong* lMaterial)
 {
-    // Get Material used for this mesh
-    FMAT* fmat = g_BFRESManager.GetMaterialByIndex(fshp.modelIndex, fshp.materialIndex);
-
     for (uint32 i = 0; i < fmat->textureRefs.textureCount; i++)
     {
         TextureRef& tex = fmat->textureRefs.textures[i];
@@ -426,124 +437,135 @@ void FBXWriter::SetTexturesToMaterial(FbxScene*& pScene, const FSHP& fshp, FbxSu
         FbxTexture::EWrapMode wrapModeY;
 
         std::string& textureName = g_BFRESManager.GetTextureFromMaterialByType(fmat, type)->name;
-		FbxFileTexture* lTexture = FbxFileTexture::Create(pScene, textureName.c_str());
+
+        // add or get texture from texturemap
+        if (g_TextureMap.find(textureName) == g_TextureMap.end())
+        {
+            FbxFileTexture* lTexture = FbxFileTexture::Create(pScene, textureName.c_str());
+            switch (tex.clampX)
+            {
+            case BFRESStructs::TextureRef::GX2TexClamp::Wrap:
+                wrapModeX = FbxTexture::eRepeat;
+                break;
+            case BFRESStructs::TextureRef::GX2TexClamp::Mirror:
+                break;
+            case BFRESStructs::TextureRef::GX2TexClamp::Clamp:
+                wrapModeX = FbxTexture::eClamp;
+                break;
+            case BFRESStructs::TextureRef::GX2TexClamp::MirrorOnce:
+                break;
+            case BFRESStructs::TextureRef::GX2TexClamp::ClampHalfBorder:
+                break;
+            case BFRESStructs::TextureRef::GX2TexClamp::MirrorOnceHalfBorder:
+                break;
+            case BFRESStructs::TextureRef::GX2TexClamp::ClampBorder:
+                break;
+            case BFRESStructs::TextureRef::GX2TexClamp::MirrorOnceBorder:
+                break;
+            default:
+                break;
+            }
+
+            switch (tex.clampY)
+            {
+            case BFRESStructs::TextureRef::GX2TexClamp::Wrap:
+                wrapModeY = FbxTexture::eRepeat;
+                break;
+            case BFRESStructs::TextureRef::GX2TexClamp::Mirror:
+                break;
+            case BFRESStructs::TextureRef::GX2TexClamp::Clamp:
+                wrapModeY = FbxTexture::eClamp;
+                break;
+            case BFRESStructs::TextureRef::GX2TexClamp::MirrorOnce:
+                break;
+            case BFRESStructs::TextureRef::GX2TexClamp::ClampHalfBorder:
+                break;
+            case BFRESStructs::TextureRef::GX2TexClamp::MirrorOnceHalfBorder:
+                break;
+            case BFRESStructs::TextureRef::GX2TexClamp::ClampBorder:
+                break;
+            case BFRESStructs::TextureRef::GX2TexClamp::MirrorOnceBorder:
+                break;
+            default:
+                break;
+            }
+
+            std::string filePath = (fbxExportPath + (std::string)"Textures/" + textureName + ".tga");
+            lTexture->SetFileName(filePath.c_str());
+            lTexture->SetTextureUse(textureUse);
+            lTexture->SetMappingType(FbxTexture::eUV);
+            lTexture->SetMaterialUse(FbxFileTexture::eModelMaterial);
+            lTexture->SetSwapUV(false);
+            lTexture->SetTranslation(0.0, 0.0);
+            lTexture->SetScale(1.0, 1.0);
+            lTexture->SetRotation(0.0, 0.0);
+            lTexture->UVSet.Set(uvLayerName); // Connect texture to the proper UV
+            lTexture->SetWrapMode(wrapModeX, wrapModeY);
+
+            g_TextureMap[textureName] = lTexture;
+        }
+
+        FbxFileTexture* lTexture = g_TextureMap[textureName];
 
         switch (type)
         {
         case GX2TextureMapType::Albedo:
             textureUse = FbxTexture::ETextureUse::eStandard;
-            uvLayerName = lLayerElementUV0->GetName();
+            uvLayerName = "uv0"; //lLayerElementUV0->GetName();
             lMaterial->Diffuse.ConnectSrcObject(lTexture);
             break;
         case GX2TextureMapType::Normal:
             textureUse = FbxTexture::ETextureUse::eBumpNormalMap;
-            uvLayerName = lLayerElementUV1->GetName();
+            uvLayerName = "uv1"; //lLayerElementUV1->GetName();
             lMaterial->NormalMap.ConnectSrcObject(lTexture);
             break;
         case GX2TextureMapType::Specular:
             textureUse = FbxTexture::ETextureUse::eStandard;
-            uvLayerName = lLayerElementUV1->GetName();
+            uvLayerName = "uv1"; //lLayerElementUV1->GetName();
             lMaterial->Specular.ConnectSrcObject(lTexture);
             break;
         case GX2TextureMapType::AmbientOcclusion:
             textureUse = FbxTexture::ETextureUse::eStandard;
-            uvLayerName = lLayerElementUV1->GetName();
+            uvLayerName = "uv1"; //lLayerElementUV1->GetName();
             lMaterial->Ambient.ConnectSrcObject(lTexture);
             break;
         case GX2TextureMapType::Emission:
             textureUse = FbxTexture::ETextureUse::eStandard;
-            uvLayerName = lLayerElementUV1->GetName();
+            uvLayerName = "uv1"; //lLayerElementUV1->GetName();
             lMaterial->Emissive.ConnectSrcObject(lTexture);
+            break;
+        case GX2TextureMapType::Bake:
+            uvLayerName = "uv1"; //lLayerElementUV1->GetName();
+            lMaterial->TransparencyFactor.ConnectSrcObject(lTexture);
             break;
         case GX2TextureMapType::Shadow:
             textureUse = FbxTexture::ETextureUse::eShadowMap;
-            uvLayerName = lLayerElementUV1->GetName();
-            lMaterial->Diffuse.ConnectSrcObject(lTexture);
+            uvLayerName = "uv1"; //lLayerElementUV1->GetName();
+        //lMaterial->Diffuse.ConnectSrcObject(lTexture);
             break;
         case GX2TextureMapType::Light:
             textureUse = FbxTexture::ETextureUse::eLightMap;
-            uvLayerName = lLayerElementUV1->GetName();
+            uvLayerName = "uv1"; //lLayerElementUV1->GetName();
             break;
         case GX2TextureMapType::MRA:
             textureUse = FbxTexture::ETextureUse::eStandard;
-            uvLayerName = lLayerElementUV1->GetName();
+            uvLayerName = "uv1"; //lLayerElementUV1->GetName();
             break;
         case GX2TextureMapType::Metalness:
             textureUse = FbxTexture::ETextureUse::eStandard;
-            uvLayerName = lLayerElementUV1->GetName();
+            uvLayerName = "uv1"; //lLayerElementUV1->GetName();
             break;
         case GX2TextureMapType::Roughness:
             textureUse = FbxTexture::ETextureUse::eStandard;
-            uvLayerName = lLayerElementUV1->GetName();
+            uvLayerName = "uv1"; //lLayerElementUV1->GetName();
             break;
         case GX2TextureMapType::SubSurfaceScattering:
             textureUse = FbxTexture::ETextureUse::eStandard;
-            uvLayerName = lLayerElementUV1->GetName();
+            uvLayerName = "uv1"; //lLayerElementUV1->GetName();
             break;
         default:
             break;
         }
-
-        switch( tex.clampX )
-        {
-        case BFRESStructs::TextureRef::GX2TexClamp::Wrap:
-            wrapModeX = FbxTexture::eRepeat;
-            break;
-        case BFRESStructs::TextureRef::GX2TexClamp::Mirror:
-            break;
-        case BFRESStructs::TextureRef::GX2TexClamp::Clamp:
-            wrapModeX = FbxTexture::eClamp;
-            break;
-        case BFRESStructs::TextureRef::GX2TexClamp::MirrorOnce:
-            break;
-        case BFRESStructs::TextureRef::GX2TexClamp::ClampHalfBorder:
-            break;
-        case BFRESStructs::TextureRef::GX2TexClamp::MirrorOnceHalfBorder:
-            break;
-        case BFRESStructs::TextureRef::GX2TexClamp::ClampBorder:
-            break;
-        case BFRESStructs::TextureRef::GX2TexClamp::MirrorOnceBorder:
-            break;
-        default:
-            break;
-        }
-
-        switch( tex.clampY )
-        {
-        case BFRESStructs::TextureRef::GX2TexClamp::Wrap:
-            wrapModeY = FbxTexture::eRepeat;
-            break;
-        case BFRESStructs::TextureRef::GX2TexClamp::Mirror:
-            break;
-        case BFRESStructs::TextureRef::GX2TexClamp::Clamp:
-            wrapModeY = FbxTexture::eClamp;
-            break;
-        case BFRESStructs::TextureRef::GX2TexClamp::MirrorOnce:
-            break;
-        case BFRESStructs::TextureRef::GX2TexClamp::ClampHalfBorder:
-            break;
-        case BFRESStructs::TextureRef::GX2TexClamp::MirrorOnceHalfBorder:
-            break;
-        case BFRESStructs::TextureRef::GX2TexClamp::ClampBorder:
-            break;
-        case BFRESStructs::TextureRef::GX2TexClamp::MirrorOnceBorder:
-            break;
-        default:
-            break;
-        }
-
-        std::string filePath = ( fbxExportPath + (std::string)"Textures/" + textureName + ".tga" );
-		lTexture->SetFileName(filePath.c_str());
-		lTexture->SetTextureUse(textureUse);
-		lTexture->SetMappingType(FbxTexture::eUV);
-		lTexture->SetMaterialUse(FbxFileTexture::eModelMaterial);
-		lTexture->SetSwapUV(false);
-		lTexture->SetTranslation(0.0, 0.0);
-		lTexture->SetScale(1.0, 1.0);
-		lTexture->SetRotation(0.0, 0.0);
-		lTexture->UVSet.Set(uvLayerName); // Connect texture to the proper UV
-        lTexture->SetWrapMode( wrapModeX, wrapModeY );
-			
     }
 }
 
@@ -588,7 +610,7 @@ void FBXWriter::WriteSkin(FbxScene*& pScene, FbxMesh*& pMesh, std::map<uint32, S
     for (; iter != end; ++iter)
     {
         SkinCluster& skinCluster = iter->second;
-        if (skinCluster.m_vControlPointIndices.size() == 0)	        
+        if (skinCluster.m_vControlPointIndices.size() == 0)
             std::string boneName = fskl.bones[iter->first].name;
 
         FbxNode* pBoneNode = pScene->FindNodeByName(FbxString(skinCluster.m_szName.c_str()));
@@ -598,9 +620,9 @@ void FBXWriter::WriteSkin(FbxScene*& pScene, FbxMesh*& pMesh, std::map<uint32, S
         pCluster->SetLink(pBoneNode);
         // eTotalOne means Mode eTotalOne is identical to mode eNormalize except that the sum of the weights assigned to a control point is not normalized and must equal 1.0.
         // https://help.autodesk.com/view/FBX/2017/ENU/?guid=__cpp_ref_class_fbx_cluster_html
-        pCluster->SetLinkMode(FbxCluster::eTotalOne); 
-        
-        for(uint32 uiControlPoint = 0; uiControlPoint < skinCluster.m_vControlPointIndices.size(); ++uiControlPoint)
+        pCluster->SetLinkMode(FbxCluster::eTotalOne);
+
+        for (uint32 uiControlPoint = 0; uiControlPoint < skinCluster.m_vControlPointIndices.size(); ++uiControlPoint)
         {
             pCluster->AddControlPointIndex(skinCluster.m_vControlPointIndices[uiControlPoint],
                                            skinCluster.m_vControlPointWeights[uiControlPoint]);
@@ -614,7 +636,7 @@ void FBXWriter::WriteSkin(FbxScene*& pScene, FbxMesh*& pMesh, std::map<uint32, S
         // Add the clusters to the skin
         pSkin->AddCluster(pCluster);
     }
-    
+
     pMesh->AddDeformer(pSkin);
 }
 
@@ -642,16 +664,16 @@ void AddNodeRecursively(FbxArray<FbxNode*>& pNodeArray, FbxNode* pNode)
 void FBXWriter::WriteBindPose(FbxScene*& pScene, FbxNode*& pMeshNode)
 {
     // In the bind pose, we must store all the link's global matrix at the time of the bind.
-// Plus, we must store all the parent(s) global matrix of a link, even if they are not
-// themselves deforming any model.
+    // Plus, we must store all the parent(s) global matrix of a link, even if they are not
+    // themselves deforming any model.
 
-// In this example, since there is only one model deformed, we don't need walk through 
-// the scene
-//
+    // In this example, since there is only one model deformed, we don't need walk through 
+    // the scene
+    //
 
-// Now list the all the link involve in the patch deformation
+    // Now list the all the link involve in the patch deformation
     FbxArray<FbxNode*> lClusteredFbxNodes;
-    int                       i, j;
+    int i, j;
 
     if (pMeshNode && pMeshNode->GetNodeAttribute())
     {
@@ -681,7 +703,6 @@ void FBXWriter::WriteBindPose(FbxScene*& pScene, FbxNode*& pMeshNode)
                     FbxNode* lClusterNode = lSkin->GetCluster(j)->GetLink();
                     AddNodeRecursively(lClusteredFbxNodes, lClusterNode);
                 }
-
             }
 
             // Add the patch to the pose
@@ -716,10 +737,10 @@ void FBXWriter::WriteBindPose(FbxScene*& pScene, FbxNode*& pMeshNode)
 // -----------------------------------------------------------------------
 void FBXWriter::CreateSkinClusterData(const FVTX& vert, uint32 uiVertIndex, std::map<uint32, SkinCluster>& BoneIndexToSkinClusterMap, std::vector<BoneMetadata>& boneListInfos, const FSHP& fshp)
 {
-    uint32 uiBlendIndices[4] = { vert.blendIndex.X, vert.blendIndex.Y, vert.blendIndex.Z, vert.blendIndex.W };
-    float  fBlendWeights[4] = { vert.blendWeights.X, vert.blendWeights.Y, vert.blendWeights.Z, vert.blendWeights.W };
+    uint32 uiBlendIndices[4] = {vert.blendIndex.X, vert.blendIndex.Y, vert.blendIndex.Z, vert.blendIndex.W};
+    float fBlendWeights[4] = {vert.blendWeights.X, vert.blendWeights.Y, vert.blendWeights.Z, vert.blendWeights.W};
 
-	if (boneListInfos[uiBlendIndices[0]].eSkinningType == SkinningType::eRigid)
+    if (boneListInfos[uiBlendIndices[0]].eSkinningType == SkinningType::eRigid)
     {
         std::map<uint32, SkinCluster>::iterator iter = BoneIndexToSkinClusterMap.find(boneListInfos[uiBlendIndices[0]].uiBoneIndex); // Try to find a skin cluster with the given bone index
 

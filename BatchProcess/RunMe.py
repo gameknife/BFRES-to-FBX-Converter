@@ -21,6 +21,11 @@ configType = "Debug" if isDebug else "Release"
 inDir = os.path.join(initialWD, "In\\")
 outDir = os.path.join(initialWD, "Out\\")
 
+if not os.access(inDir, os.F_OK) :
+	os.mkdir(inDir)
+if not os.access(outDir, os.F_OK) :
+	os.mkdir(outDir)
+
 importerFP = os.path.join(initialWD, "Importer", configType, "BFRESImporter.exe")
 exporterFP = os.path.join(initialWD, "Exporter", configType, "FBXExporter.exe")
 

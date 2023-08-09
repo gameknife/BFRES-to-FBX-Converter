@@ -101,7 +101,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);./Headers;./libs/FBX SDK/include;./libs/RapidXML;</IncludePath>
-    <OutDir>$(SolutionDir)..\BatchProcess\Exporter\$(Configuration)\</OutDir>
+    <OutDir>$(ProjectDir)..\..\BatchProcess\Exporter\$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -121,9 +121,9 @@
     </Link>
     <PostBuildEvent>
       <Command>xcopy /y "$(ProjectDir)libs\FBX SDK\lib\vs2017\x86\debug\libfbxsdk.dll" "$(OutDir)"
-if exist "$(SolutionDir)..\BatchProcess\Exporter\Debug\" rmdir /s "$(SolutionDir)..\BatchProcess\Exporter\Debug\"
-mkdir "$(SolutionDir)..\BatchProcess\Exporter\Debug\"
-xcopy /y /s  "$(TargetDir)*" "$(SolutionDir)..\BatchProcess\Exporter\Debug\"</Command>
+if exist "$(ProjectDir)..\..\BatchProcess\Exporter\Debug\" rmdir /s "$(ProjectDir)..\..\BatchProcess\Exporter\Debug\"
+mkdir "$(ProjectDir)..\..\BatchProcess\Exporter\Debug\"
+xcopy /y /s  "$(TargetDir)*" "$(ProjectDir)..\..\BatchProcess\Exporter\Debug\"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -162,9 +162,9 @@ xcopy /y /s  "$(TargetDir)*" "$(SolutionDir)..\BatchProcess\Exporter\Debug\"</Co
     </Link>
     <PostBuildEvent>
       <Command>xcopy /y "$(ProjectDir)libs\FBX SDK\lib\vs2017\x86\release\libfbxsdk.dll" "$(OutDir)"
-if exist "$(SolutionDir)..\BatchProcess\Exporter\Release\" rmdir /s "$(SolutionDir)..\BatchProcess\Exporter\Release\"
-mkdir "$(SolutionDir)..\BatchProcess\Exporter\Release\"
-xcopy /y /s  "$(TargetDir)*" "$(SolutionDir)..\BatchProcess\Exporter\Release\"</Command>
+if exist "$(ProjectDir)\..\..\BatchProcess\Exporter\Release\" rmdir /s "$(ProjectDir)\..\..\BatchProcess\Exporter\Release\"
+mkdir "$(ProjectDir)\..\..\BatchProcess\Exporter\Release\"
+xcopy /y /s  "$(TargetDir)*" "$(ProjectDir)\..\..\BatchProcess\Exporter\Release\"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
