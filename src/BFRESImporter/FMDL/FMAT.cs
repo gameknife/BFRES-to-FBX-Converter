@@ -510,10 +510,11 @@ namespace BFRES_Importer
                 else if (TextureName.Contains("sss"))                  writer.WriteAttributeString("Type", "SubSurfaceScattering");
                 else if (texSamplerName == "_ao0")                     writer.WriteAttributeString("Type", "AO"                  );
                 else if (TextureName.Contains("Alb")) { AlbedoCount++; writer.WriteAttributeString("Type", "Diffuse"             ); }
-                else if (texSamplerName == "_sd0")
+                else if (texSamplerName == "_sd0") { writer.WriteAttributeString("Type", "Shadow"); }
+                else if (texSamplerName == "_ms0") { writer.WriteAttributeString("Type", "Mask"); }
+                else
                 {
-                    Debug.WriteLine("_sd0 not yet verified to be of a type yet."); // TODO find out what _sd0 is
-                    writer.WriteAttributeString("Type", "Shadow");
+                    writer.WriteAttributeString("Type", "unknown");
                 }
 
                 writer.WriteAttributeString("ClampX", mat.Samplers[id].TexSampler.ClampX.ToString());

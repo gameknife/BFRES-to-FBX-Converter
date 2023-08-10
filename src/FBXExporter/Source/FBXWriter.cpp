@@ -174,6 +174,12 @@ void FBXWriter::WriteModel(FbxScene*& pScene, const FMDL& fmdl, uint32 fmdlIndex
 // -----------------------------------------------------------------------
 void FBXWriter::WriteSkeleton(FbxScene*& pScene, const FSKL& fskl, std::vector<BoneMetadata>& boneInfoList)
 {
+    // two root bone, ue cannot handle
+    if(fskl.bones.size() == 1 && !fskl.bones[0].useRigidMatrix && !fskl.bones[0].useSmoothMatrix)
+    {
+        return;
+    }
+    
     const uint32 uiTotalBones = fskl.bones.size();
     std::vector<FbxNode*> boneNodes(uiTotalBones);
 
@@ -318,9 +324,9 @@ void FBXWriter::WriteMesh(FbxSurfacePhong* lMaterial, FbxScene*& pScene, FbxNode
 
     //Create layer elements and set mapping modes and reference modes
     FbxLayerElementNormal* lLayerElementNormal = FbxLayerElementNormal::Create(lMesh, "_n0");
-    FbxLayerElementUV* lLayerElementUV0 = FbxLayerElementUV::Create(lMesh, "_uv0");
-    FbxLayerElementUV* lLayerElementUV1 = FbxLayerElementUV::Create(lMesh, "_uv1");
-    FbxLayerElementUV* lLayerElementUV2 = FbxLayerElementUV::Create(lMesh, "_uv2");
+    FbxLayerElementUV* lLayerElementUV0 = FbxLayerElementUV::Create(lMesh, "UVChannel_1");
+    FbxLayerElementUV* lLayerElementUV1 = FbxLayerElementUV::Create(lMesh, "UVChannel_2");
+    FbxLayerElementUV* lLayerElementUV2 = FbxLayerElementUV::Create(lMesh, "UVChannel_3");
     FbxLayerElementTangent* lLayerElementTangent = FbxLayerElementTangent::Create(lMesh, "_t0");
     FbxLayerElementBinormal* lLayerElementBinormal = FbxLayerElementBinormal::Create(lMesh, "_b0");
     FbxLayerElementVertexColor* lLayerElementCol0 = FbxLayerElementVertexColor::Create(lMesh, "_c0");
@@ -343,6 +349,7 @@ void FBXWriter::WriteMesh(FbxSurfacePhong* lMaterial, FbxScene*& pScene, FbxNode
 
     std::map<uint32, SkinCluster> SkinClusterMap;
 
+    uint32 face = uiNumControlPoints / 3;
     for (uint32 i = 0; i < uiNumControlPoints; i++)
     {
         const Math::vector3F& posVec = fshp.vertices[i].position0;
@@ -407,12 +414,13 @@ void FBXWriter::WriteMesh(FbxSurfacePhong* lMaterial, FbxScene*& pScene, FbxNode
     lMaterialElement->SetMappingMode(FbxGeometryElement::eByPolygon);
     lMaterialElement->SetReferenceMode(FbxGeometryElement::eDirect);
 
-    // HACK HACK HACK HACK HACK
-    // gameknife, why dont write the lod more?
-    if (uiLODIndex == 0)
-    {
-    }
+    FbxLayerElementSmoothing* lLayerElementSmoothing = FbxLayerElementSmoothing::Create(lMesh, "Smoothing");
 
+    lLayerElementSmoothing->SetMappingMode(FbxLayerElement::eByPolygon);
+    lLayerElementSmoothing->SetReferenceMode(FbxLayerElement::eDirect);    // must be direct
+    
+    lLayer00->SetSmoothing(lLayerElementSmoothing);
+    
     lMeshNode->AddMaterial(lMaterial);
     lMeshNode->SetShadingMode(FbxNode::eTextureShading);
 
@@ -492,7 +500,6 @@ void FBXWriter::SetTexturesToMaterial(FbxScene*& pScene, FMAT* fmat, FbxSurfaceP
 
             std::string filePath = (fbxExportPath + (std::string)"Textures/" + textureName + ".tga");
             lTexture->SetFileName(filePath.c_str());
-            lTexture->SetTextureUse(textureUse);
             lTexture->SetMappingType(FbxTexture::eUV);
             lTexture->SetMaterialUse(FbxFileTexture::eModelMaterial);
             lTexture->SetSwapUV(false);
@@ -510,58 +517,43 @@ void FBXWriter::SetTexturesToMaterial(FbxScene*& pScene, FMAT* fmat, FbxSurfaceP
         switch (type)
         {
         case GX2TextureMapType::Albedo:
-            textureUse = FbxTexture::ETextureUse::eStandard;
-            uvLayerName = "uv0"; //lLayerElementUV0->GetName();
             lMaterial->Diffuse.ConnectSrcObject(lTexture);
             break;
         case GX2TextureMapType::Normal:
-            textureUse = FbxTexture::ETextureUse::eBumpNormalMap;
-            uvLayerName = "uv1"; //lLayerElementUV1->GetName();
             lMaterial->NormalMap.ConnectSrcObject(lTexture);
             break;
         case GX2TextureMapType::Specular:
-            textureUse = FbxTexture::ETextureUse::eStandard;
-            uvLayerName = "uv1"; //lLayerElementUV1->GetName();
             lMaterial->Specular.ConnectSrcObject(lTexture);
             break;
         case GX2TextureMapType::AmbientOcclusion:
-            textureUse = FbxTexture::ETextureUse::eStandard;
-            uvLayerName = "uv1"; //lLayerElementUV1->GetName();
             lMaterial->Ambient.ConnectSrcObject(lTexture);
             break;
         case GX2TextureMapType::Emission:
-            textureUse = FbxTexture::ETextureUse::eStandard;
-            uvLayerName = "uv1"; //lLayerElementUV1->GetName();
             lMaterial->Emissive.ConnectSrcObject(lTexture);
             break;
+        case GX2TextureMapType::Mask:
+            lMaterial->TransparentColor.ConnectSrcObject(lTexture);
+            break;
         case GX2TextureMapType::Bake:
-            uvLayerName = "uv1"; //lLayerElementUV1->GetName();
-            lMaterial->TransparencyFactor.ConnectSrcObject(lTexture);
+            lMaterial->Ambient.ConnectSrcObject(lTexture);
             break;
         case GX2TextureMapType::Shadow:
-            textureUse = FbxTexture::ETextureUse::eShadowMap;
-            uvLayerName = "uv1"; //lLayerElementUV1->GetName();
-        //lMaterial->Diffuse.ConnectSrcObject(lTexture);
+            lMaterial->Ambient.ConnectSrcObject(lTexture);
             break;
         case GX2TextureMapType::Light:
-            textureUse = FbxTexture::ETextureUse::eLightMap;
-            uvLayerName = "uv1"; //lLayerElementUV1->GetName();
+            uvLayerName = "_uv1"; //lLayerElementUV1->GetName();
             break;
         case GX2TextureMapType::MRA:
-            textureUse = FbxTexture::ETextureUse::eStandard;
-            uvLayerName = "uv1"; //lLayerElementUV1->GetName();
+            uvLayerName = "_uv1"; //lLayerElementUV1->GetName();
             break;
         case GX2TextureMapType::Metalness:
-            textureUse = FbxTexture::ETextureUse::eStandard;
-            uvLayerName = "uv1"; //lLayerElementUV1->GetName();
+            uvLayerName = "_uv1"; //lLayerElementUV1->GetName();
             break;
         case GX2TextureMapType::Roughness:
-            textureUse = FbxTexture::ETextureUse::eStandard;
-            uvLayerName = "uv1"; //lLayerElementUV1->GetName();
+            uvLayerName = "_uv1"; //lLayerElementUV1->GetName();
             break;
         case GX2TextureMapType::SubSurfaceScattering:
-            textureUse = FbxTexture::ETextureUse::eStandard;
-            uvLayerName = "uv1"; //lLayerElementUV1->GetName();
+            uvLayerName = "_uv1"; //lLayerElementUV1->GetName();
             break;
         default:
             break;

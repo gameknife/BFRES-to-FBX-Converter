@@ -68,6 +68,8 @@ namespace BFRES_Importer
 
         static void Main(string[] args)
         {
+            Console.SetOut(TextWriter.Null);
+            
             if (args.Length == 0)
             {
                 FilePath = (AssetDir + "Npc_Gerudo_Queen.bfres");

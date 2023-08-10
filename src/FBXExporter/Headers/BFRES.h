@@ -116,6 +116,7 @@ enum class GX2TextureMapType
     Roughness,
     SubSurfaceScattering,
 	Bake,
+	Mask,
     eMAX
 };
 

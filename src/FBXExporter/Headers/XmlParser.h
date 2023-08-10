@@ -507,7 +507,8 @@ public:
         else if (token == "Metalness"           ) eType = GX2TextureMapType::Metalness;
         else if (token == "Roughness"           ) eType = GX2TextureMapType::Roughness;
         else if (token == "SubSurfaceScattering") eType = GX2TextureMapType::SubSurfaceScattering;
-        else if (token == "bake0") eType = GX2TextureMapType::Bake;
+        else if (token == "bake0"				) eType = GX2TextureMapType::Bake;
+        else if (token == "Mask"				) eType = GX2TextureMapType::Mask;
         else
         {
             assert(0 && "Invalid argument");

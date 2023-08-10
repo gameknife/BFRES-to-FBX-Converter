@@ -68,8 +68,9 @@ bool SaveDocument(FbxManager* pManager, FbxDocument* pDocument, const char* pFil
     }
 
     FbxManager::GetFileFormatVersion(lMajor, lMinor, lRevision);
+#if PRINT_DEBUG_INFO
     FBXSDK_printf("FBX version number for this version of the FBX SDK is %d.%d.%d\n\n", lMajor, lMinor, lRevision);
-
+#endif
     // Export the scene.
     lStatus = lExporter->Export(pDocument);
 
@@ -169,7 +170,7 @@ int main( int argc, char* argv[] )
 
 	std::cout << pScene->GetMemberCount() << "\n\n";
 	
-#ifdef PRINT_DEBUG_INFO
+#if PRINT_DEBUG_INFO
 	for (int32 i = 0; i < pScene->GetNodeCount(); i++)
 	{
 		std::cout << "Name: " << pScene->GetNode(i)->GetName() << "\n";
