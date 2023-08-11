@@ -14,14 +14,15 @@ FBXWriter::~FBXWriter()
 }
 
 bool FBXWriter::g_bWriteTextures = false;
-
+std::map<std::string, FbxSurfacePhong*> FBXWriter::g_MaterialMap;
+std::map<std::string, FbxFileTexture*> FBXWriter::g_TextureMap;
 // -----------------------------------------------------------------------
 // -----------------------------------------------------------------------
 void FBXWriter::CreateFBX(FbxScene*& pScene, const BFRES& bfres)
 {
     for (uint32 i = 0; i < bfres.fmdl.size(); i++)
     {
-        WriteModel(pScene, bfres.fmdl[i], i);
+        WriteModel(pScene, bfres.fmdl[i], i, false);
     }
 
     for (const Anim& anim : bfres.fska.anims)
@@ -156,20 +157,23 @@ void FBXWriter::AddKeyFramesToAnimCurve(FbxAnimCurve*& pAnimCurve, const AnimTra
 
 // -----------------------------------------------------------------------
 // -----------------------------------------------------------------------
-void FBXWriter::WriteModel(FbxScene*& pScene, const FMDL& fmdl, uint32 fmdlIndex)
+void FBXWriter::WriteModel(FbxScene*& pScene, const FMDL& fmdl, uint32 fmdlIndex, bool onlySkeleton)
 {
     // Create an array to store the smooth and rigid bone indices
     std::vector<BoneMetadata> boneInfoList(fmdl.fskl.boneList.size());
 
     WriteSkeleton(pScene, fmdl.fskl, boneInfoList);
 
-    for (uint32 i = 0; i < fmdl.fshps.size(); i++)
+    if( !onlySkeleton )
     {
-        WriteShape(pScene, fmdl.fshps[i], boneInfoList, fmdlIndex);
+        for (uint32 i = 0; i < fmdl.fshps.size(); i++)
+        {
+            WriteShape(pScene, fmdl.fshps[i], boneInfoList, fmdlIndex);
+        }
     }
 }
 
-
+bool g_RootBoneCreated = false;
 // -----------------------------------------------------------------------
 // -----------------------------------------------------------------------
 void FBXWriter::WriteSkeleton(FbxScene*& pScene, const FSKL& fskl, std::vector<BoneMetadata>& boneInfoList)
@@ -179,6 +183,13 @@ void FBXWriter::WriteSkeleton(FbxScene*& pScene, const FSKL& fskl, std::vector<B
     {
         return;
     }
+
+    // gameknife mod, ue only support single root bone, so skip next root bone temp
+    // if(g_RootBoneCreated)
+    // {
+    //     boneInfoList.clear();
+    //     return;
+    // }
     
     const uint32 uiTotalBones = fskl.bones.size();
     std::vector<FbxNode*> boneNodes(uiTotalBones);
@@ -192,7 +203,10 @@ void FBXWriter::WriteSkeleton(FbxScene*& pScene, const FSKL& fskl, std::vector<B
         if (bone.parentIndex >= 0)
             boneNodes[bone.parentIndex]->AddChild(boneNodes[i]);
         else
+        {
+            g_RootBoneCreated = true;
             pScene->GetRootNode()->AddChild(boneNodes[i]);
+        }
     }
 }
 
@@ -253,7 +267,6 @@ void FBXWriter::CreateBone(FbxScene*& pScene, const Bone& bone, FbxNode*& lBoneN
     }
 }
 
-std::map<std::string, FbxSurfacePhong*> g_MaterialMap;
 // -----------------------------------------------------------------------
 // -----------------------------------------------------------------------
 void FBXWriter::WriteShape(FbxScene*& pScene, const FSHP& fshp, std::vector<BoneMetadata>& boneListInfos, uint32 fmdlIndex)
@@ -428,7 +441,7 @@ void FBXWriter::WriteMesh(FbxSurfacePhong* lMaterial, FbxScene*& pScene, FbxNode
     WriteBindPose(pScene, lMeshNode);
 }
 
-std::map<std::string, FbxFileTexture*> g_TextureMap;
+
 // -----------------------------------------------------------------------
 // -----------------------------------------------------------------------
 // Currently as far as it will get. Certain things, like AO maps, are not

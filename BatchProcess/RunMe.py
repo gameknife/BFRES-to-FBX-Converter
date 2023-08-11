@@ -37,11 +37,18 @@ for sbfresFile in sorted(os.listdir(inDir)):
         new_text = re.sub("-", "_", sbfresFile)
         os.rename(os.path.join(inDir, sbfresFile), os.path.join(inDir, new_text))
 
+taskTotal = 0
+for sbfresFile in sorted(os.listdir(inDir)):
+    if sbfresFile.endswith(".sbfres"):
+        taskTotal += 1
+
+taskProgress = 0
 for sbfresFile in sorted(os.listdir(inDir)):
     if sbfresFile.endswith(".sbfres"):		
         fileNameNoExt = sbfresFile[0:len(sbfresFile) - len(".sbfres")]
         # Set file group name
-        print("SBfres file: " + sbfresFile)
+        taskProgress = taskProgress + 1
+        print("[{}/{}] {}".format( taskProgress, taskTotal, sbfresFile) )
         if sbfresFile.endswith("_Animation.sbfres"):
             fileGroupName = sbfresFile[0:len(
                 sbfresFile) - len("_Animation.sbfres")]
@@ -53,30 +60,30 @@ for sbfresFile in sorted(os.listdir(inDir)):
             fileGroupName = sbfresFile[0:len(sbfresFile) - 10]
         else:
             fileGroupName = sbfresFile[0:len(sbfresFile) - len(".sbfres")]
-        print("Filegroup Name: " + fileGroupName)
+        #print("Filegroup Name: " + fileGroupName)
 
         # Create filegroup subdirectory
         fileGroupSubPath = os.path.join(outDir, fileGroupName)
         if not os.path.exists(fileGroupSubPath):
-            print("Creating subdirectory for filegroup: " + fileGroupSubPath)
+            #print("Creating subdirectory for filegroup: " + fileGroupSubPath)
             os.makedirs(fileGroupSubPath)
-        else:
-            print("Subdirectory for filegroup exists already")
+        else: # skip if already exists
+            continue
 
         # Run Importer
         importerCommand = "\"" + importerFP + "\" \"" + \
             os.path.join(inDir, sbfresFile) + "\" \"" + \
             fileGroupSubPath + "/\""
-        print("Running Importer:" + importerCommand)
+        #print("Running Importer:" + importerCommand)
         os.system("\"" + importerCommand + "\"")
 
         # If it's not a texture Bfres, run the exporter
         inputXMLPath = os.path.join(fileGroupSubPath, fileNameNoExt + ".xml")
         if not sbfresFile.endswith(".Tex1.sbfres"):
             if not sbfresFile.endswith(".Tex2.sbfres"):
-                print("Input XML Path = " + inputXMLPath)
+                #print("Input XML Path = " + inputXMLPath)
                 outputFBXPath = fileGroupSubPath + "/"
-                print("Export Path" + outputFBXPath)
+                #print("Export Path" + outputFBXPath)
                 exporterCommand = "\"" + exporterFP + "\" \"" + inputXMLPath + \
                     "\" \"" + outputFBXPath + "\"" + writeTextures
                 os.system("\"" + exporterCommand + "\"")
@@ -88,6 +95,6 @@ for sbfresFile in sorted(os.listdir(inDir)):
                         logFile.write("\n" + outputFBXFilename +
                                       ";-1;Fbx file failed to write.")
 
-        os.system("xcopy /y \"" + inputXMLPath + "\" \"" +
-                  os.path.join(fileGroupSubPath, "XMLDumps", "\""))
+        #os.system("xcopy /y \"" + inputXMLPath + "\" \"" +
+        #          os.path.join(fileGroupSubPath, "XMLDumps", "\""))
         os.system("del /q \"" + inputXMLPath + "\"")

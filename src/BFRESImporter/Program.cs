@@ -138,12 +138,14 @@ namespace BFRES_Importer
                     JPTexture jpTexture = new JPTexture();
                     jpTexture.Read(res.Textures[ii]);
                     if (jpTexture.isTex2)
-                        for (int i = 1; i < jpTexture.MipCount; i++)
-                        {
-                            if (!Directory.Exists(OutputDir + "Mips/"))
-                                Directory.CreateDirectory(OutputDir + "Mips/");
-                            jpTexture.SaveBitMap(OutputDir + "Mips/" + jpTexture.Name + i + ".tga", false, false, 0, i);
-                        }
+                    {
+                        // for (int i = 1; i < jpTexture.MipCount; i++)
+                        // {
+                        //     if (!Directory.Exists(OutputDir + "Mips/"))
+                        //         Directory.CreateDirectory(OutputDir + "Mips/");
+                        //     jpTexture.SaveBitMap(OutputDir + "Mips/" + jpTexture.Name + i + ".tga", false, false, 0, i);
+                        // }   
+                    }
                     else
                     {
                         if (!Directory.Exists(OutputDir + "Textures/"))

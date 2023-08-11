@@ -136,20 +136,7 @@ int main( int argc, char* argv[] )
     XML::XmlParser::Parse(medianFilePath.c_str(), *bfres);
 
     FbxManager* lSdkManager = FbxManager::Create();
-    FbxScene* pScene = FbxScene::Create(lSdkManager, "Scene lame");
-
-    // Convert the scene to meters using the defined options.
-    const FbxSystemUnit::ConversionOptions lConversionOptions = {
-      false, /* mConvertRrsNodes */
-      true, /* mConvertLimits */
-      true, /* mConvertClusters */
-      true, /* mConvertLightIntensity */
-      true, /* mConvertPhotometricLProperties */
-      true  /* mConvertCameraClipPlanes */
-    };
-
-    FbxSystemUnit::m.ConvertScene( pScene, lConversionOptions );
-
+    
     if (argc == 1)
     {
 		if (!CreateDirectoryA(OUTPUT_FILE_DIR, NULL) && ERROR_ALREADY_EXISTS != GetLastError())
@@ -165,49 +152,69 @@ int main( int argc, char* argv[] )
             assert(0 && "Failed to create directory.");
     }
 
-    FBXWriter* fbx = new FBXWriter();
-    fbx->CreateFBX( pScene, *bfres );
+    // gameknife, we should export one fbx per model
+    
+    //fbx->CreateFBX( pScene, *bfres );
 
-	std::cout << pScene->GetMemberCount() << "\n\n";
-	
-#if PRINT_DEBUG_INFO
-	for (int32 i = 0; i < pScene->GetNodeCount(); i++)
-	{
-		std::cout << "Name: " << pScene->GetNode(i)->GetName() << "\n";
-		if (pScene->GetNode(i)->GetNodeAttribute())
-		{
-			std::string attributeType;
-			switch (pScene->GetNode(i)->GetNodeAttribute()->GetAttributeType())
-			{
-			case 3:
-				attributeType = "Skeleton";
-				break;
-			case 4:
-				attributeType = "Mesh";
-				break;
-			default:
-				break;
-			}
-			std::cout << "Attribute type: " << attributeType << "\n";
-		}
+    // Convert the scene to meters using the defined options.
+    const FbxSystemUnit::ConversionOptions lConversionOptions = {
+        false, /* mConvertRrsNodes */
+        true, /* mConvertLimits */
+        true, /* mConvertClusters */
+        true, /* mConvertLightIntensity */
+        true, /* mConvertPhotometricLProperties */
+        true  /* mConvertCameraClipPlanes */
+      };
+    
+    for (uint32 i = 0; i < bfres->fmdl.size(); i++)
+    {
+        FbxScene* pScene = FbxScene::Create(lSdkManager, "Scene lame");
+        FbxSystemUnit::m.ConvertScene( pScene, lConversionOptions );
 
-		if (pScene->GetNode(i)->GetParent())
-			std::cout << "Parent: " << pScene->GetNode(i)->GetParent()->GetName() << "\n";
-
-		for (int32 j = 0; j < pScene->GetNode(i)->GetChildCount(); j++)
-		{
-			if (pScene->GetNode(i)->GetChild(j))
-				std::cout << "Child: " << pScene->GetNode(i)->GetChild(j)->GetName() << "\n";
-		}
-		std::cout << "\n";
-	}
-#endif // PRINT_DEBUG_INFO
-
-    // Convert the scene to centimeters using the defined options.
-    FbxSystemUnit::cm.ConvertScene( pScene, lConversionOptions );
+        FBXWriter::g_MaterialMap.clear();
+        FBXWriter::g_TextureMap.clear();
         
-    fbxExportPath.append( fileName + ".fbx" );
-    SaveDocument(lSdkManager, pScene, fbxExportPath.c_str());
+        FBXWriter* fbx = new FBXWriter();
+        fbx->WriteModel(pScene, bfres->fmdl[i], i, false);
+        
+        FbxSystemUnit::cm.ConvertScene( pScene, lConversionOptions );
+        string SingleFbxPath = fbxExportPath + bfres->fmdl[i].name + ".fbx";
+        SaveDocument(lSdkManager, pScene, SingleFbxPath.c_str());
+    }
+
+    if(bfres->fska.anims.size() > 0)
+    {
+        FbxScene* pScene = FbxScene::Create(lSdkManager, "Scene lame");
+        FbxSystemUnit::m.ConvertScene( pScene, lConversionOptions );
+
+        FBXWriter::g_MaterialMap.clear();
+        FBXWriter::g_TextureMap.clear();
+        
+        FBXWriter* fbx = new FBXWriter();
+
+        // skeleton should write
+        for (uint32 i = 0; i < bfres->fmdl.size(); i++)
+        {
+            fbx->WriteModel(pScene, bfres->fmdl[i], i, true);
+        }
+        
+        for (const Anim& anim : bfres->fska.anims)
+        {
+            fbx->WriteAnimations(pScene, anim);
+        }
+
+        FbxSystemUnit::cm.ConvertScene( pScene, lConversionOptions );
+        string SingleFbxPath = fbxExportPath + bfres->fska.anims[0].m_szName + "_Animation.fbx";
+        SaveDocument(lSdkManager, pScene, SingleFbxPath.c_str());
+    }
+
+
+	//std::cout << pScene->GetMemberCount() << "\n\n";
+    
+   
+        
+   
+    
 
     return 0;
 }

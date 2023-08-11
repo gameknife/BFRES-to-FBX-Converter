@@ -13,6 +13,8 @@ public:
     ~FBXWriter();
 
     static bool g_bWriteTextures;
+	static std::map<std::string, FbxSurfacePhong*> g_MaterialMap;
+	static std::map<std::string, FbxFileTexture*> g_TextureMap;
 
     struct SkinCluster 
     {
@@ -52,7 +54,7 @@ public:
     void AddKeyFramesToAnimCurve( FbxAnimCurve*& pAnimCurve, const AnimTrack& animTrack, AnimTrackType animTrackType );
 
     // Model shit
-    void WriteModel( FbxScene*& pScene, const FMDL& fmdl, uint32 fmdlIndex );
+    void WriteModel( FbxScene*& pScene, const FMDL& fmdl, uint32 fmdlIndex, bool onlySkeleton );
     void WriteSkeleton(FbxScene*& pScene, const FSKL& fskl, std::vector<BoneMetadata>& boneListInfos);
     void WriteShape(FbxScene*& pScene, const FSHP& fshp, std::vector<BoneMetadata>& boneListInfos, uint32 fmdlIndex);
     void WriteMesh(FbxSurfacePhong* lMaterial, FbxScene*& pScene, FbxNode*& pLodGroup, const FSHP& fshp, const LODMesh& lodMesh, std::vector<BoneMetadata>& boneListInfos, uint32 fmdlIndex);
