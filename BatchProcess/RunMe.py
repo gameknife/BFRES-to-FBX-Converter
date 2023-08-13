@@ -6,6 +6,8 @@ from multiprocessing.sharedctypes import Value
 import time
 
 PROCESS_MAX = 24
+
+SKIP_EXIST = True
 global_start_time = time.time()
 global_initial_working_dir = os.getcwd()
 global_config_type = "Release"
@@ -53,6 +55,11 @@ if __name__ == '__main__':
     share_context_progress = mgr.Value('i', 0)
     share_context_total = mgr.Value('i', 0)
 
+    # step0. remove empty dir in Out
+    for root, dir, file in os.walk(global_out_dir):
+        if not file and not dir:
+            os.rmdir(root)
+
     # step1. extract pack
     for pack in sorted(os.listdir(global_pack_dir)):
         purename = os.path.splitext(pack)[0]
@@ -66,9 +73,9 @@ if __name__ == '__main__':
                 print('moving {}...'.format(f))
                 shutil.move(os.path.join(root, f), global_in_dir)
 
-    # step3. -xx, sub pack rename
+    # step3. -xx, sub pack rename, Item_ exception
     for sbfresFile in sorted(os.listdir(global_in_dir)):
-        if( re.match(".*-[0-9][0-9].sbfres", sbfresFile) ):
+        if( re.match(".*-[0-9][0-9].sbfres", sbfresFile) and not sbfresFile.startswith("Item_") ):
             new_text = re.sub("-", "_", sbfresFile)
             os.rename(os.path.join(global_in_dir, sbfresFile), os.path.join(global_in_dir, new_text))
 
@@ -100,6 +107,9 @@ if __name__ == '__main__':
             
             if not os.path.exists(fileGroupSubPath):
                 os.makedirs(fileGroupSubPath)
+            else:
+                if SKIP_EXIST:
+                    continue
 
             task_count = len(lines)
             lines.append((fileGroupSubPath, sbfresFile, fileNameNoExt, share_context_progress, share_context_total))
