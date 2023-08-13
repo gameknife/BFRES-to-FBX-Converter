@@ -48,10 +48,10 @@ namespace BFRES_Importer
             Debug.Assert( condition, message );
             if( !condition )
             {
-                using( StreamWriter w = File.AppendText( "log.csv" ) )
-                {
-                    Log( errorType, message, w );
-                }
+                // using( StreamWriter w = File.AppendText( "log.csv" ) )
+                // {
+                //     Log( errorType, message, w );
+                // }
             }
         }
 

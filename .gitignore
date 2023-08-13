@@ -345,4 +345,5 @@ healthchecksdb
 /BatchProcess/Exporter/
 /BatchProcess/In/
 /BatchProcess/Out/
+/BatchProcess/Pack/
 /BatchProcess/*.csv

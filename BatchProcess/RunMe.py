@@ -1,100 +1,122 @@
-import sys
 import os
 import shutil
 import re
+from multiprocessing import Pool, Manager
+from multiprocessing.sharedctypes import Value
+import time
 
-initialWD = os.getcwd()
+PROCESS_MAX = 24
+global_start_time = time.time()
+global_initial_working_dir = os.getcwd()
+global_config_type = "Release"
 
-isDebug = True
-writeTextures = ""
-if len(sys.argv) > 1:
-    i = 1
-    while i < len(sys.argv):
-        if sys.argv[i] == "-t":
-            writeTextures = " -t"
-        elif sys.argv[i] == "-r":
-            isDebug = False
-        else:
-            raise Exception(
-                "Invalid argmument! Use '-r' for release and '-t' to write textures.")
-        i += 1
-configType = "Debug" if isDebug else "Release"
+global_in_dir = os.path.join(global_initial_working_dir, "In\\")
+global_out_dir = os.path.join(global_initial_working_dir, "Out\\")
+global_pack_dir = os.path.join(global_initial_working_dir, "Pack\\")
 
-inDir = os.path.join(initialWD, "In\\")
-outDir = os.path.join(initialWD, "Out\\")
+global_total_tasks = 0
+global_passed_tasks = 0
 
-if not os.access(inDir, os.F_OK):
-    os.mkdir(inDir)
-if not os.access(outDir, os.F_OK):
-    os.mkdir(outDir)
+global_importer_bin = os.path.join(global_initial_working_dir, "Importer", global_config_type, "BFRESImporter.exe")
+global_exporter_bin = os.path.join(global_initial_working_dir, "Exporter", global_config_type, "FBXExporter.exe")
 
-importerFP = os.path.join(initialWD, "Importer",
-                          configType, "BFRESImporter.exe")
-exporterFP = os.path.join(initialWD, "Exporter", configType, "FBXExporter.exe")
+def SingleTask(param) :
+    fileGroupSubPath : str = param[0]
+    sbfresFile : str = param[1]
+    fileNameNoExt : str = param[2]
+    share_context_progress : Value = param[3]
+    share_context_total : Value = param[4]
 
-for sbfresFile in sorted(os.listdir(inDir)):
-    if( re.match(".*-[0-9][0-9].sbfres", sbfresFile) ):
-        new_text = re.sub("-", "_", sbfresFile)
-        os.rename(os.path.join(inDir, sbfresFile), os.path.join(inDir, new_text))
+    share_context_progress.value = share_context_progress.value + 1
 
-taskTotal = 0
-for sbfresFile in sorted(os.listdir(inDir)):
-    if sbfresFile.endswith(".sbfres"):
-        taskTotal += 1
+    print("[{}/{}] {}".format( share_context_progress.value, share_context_total.value, sbfresFile) )
+    importerCommand = "\"" + global_importer_bin + "\" \"" + \
+        os.path.join(global_in_dir, sbfresFile) + "\" \"" + \
+        fileGroupSubPath + "/\""
+    os.system("\"" + importerCommand + "\"")
 
-taskProgress = 0
-for sbfresFile in sorted(os.listdir(inDir)):
-    if sbfresFile.endswith(".sbfres"):		
-        fileNameNoExt = sbfresFile[0:len(sbfresFile) - len(".sbfres")]
-        # Set file group name
-        taskProgress = taskProgress + 1
-        print("[{}/{}] {}".format( taskProgress, taskTotal, sbfresFile) )
-        if sbfresFile.endswith("_Animation.sbfres"):
-            fileGroupName = sbfresFile[0:len(
-                sbfresFile) - len("_Animation.sbfres")]
-        elif sbfresFile.endswith(".Tex1.sbfres"):
-            fileGroupName = sbfresFile[0:len(sbfresFile) - len(".Tex1.sbfres")]
-        elif sbfresFile.endswith(".Tex2.sbfres"):
-            fileGroupName = sbfresFile[0:len(sbfresFile) - len(".Tex2.sbfres")]
-        elif( re.match(".*_[0-9][0-9].sbfres", sbfresFile) ):
-            fileGroupName = sbfresFile[0:len(sbfresFile) - 10]
-        else:
-            fileGroupName = sbfresFile[0:len(sbfresFile) - len(".sbfres")]
-        #print("Filegroup Name: " + fileGroupName)
+    # If it's not a texture Bfres, run the exporter
+    inputXMLPath = os.path.join(fileGroupSubPath, fileNameNoExt + ".xml")
+    if not sbfresFile.endswith(".Tex1.sbfres"):
+        if not sbfresFile.endswith(".Tex2.sbfres"):
+            outputFBXPath = fileGroupSubPath + "/"
+            exporterCommand = "\"" + global_exporter_bin + "\" \"" + inputXMLPath + \
+                "\" \"" + outputFBXPath + "\"" + " -t"
+            os.system("\"" + exporterCommand + "\"")
 
-        # Create filegroup subdirectory
-        fileGroupSubPath = os.path.join(outDir, fileGroupName)
-        if not os.path.exists(fileGroupSubPath):
-            #print("Creating subdirectory for filegroup: " + fileGroupSubPath)
-            os.makedirs(fileGroupSubPath)
-        else: # skip if already exists
-            continue
+    os.system("del /q \"" + inputXMLPath + "\"")
 
-        # Run Importer
-        importerCommand = "\"" + importerFP + "\" \"" + \
-            os.path.join(inDir, sbfresFile) + "\" \"" + \
-            fileGroupSubPath + "/\""
-        #print("Running Importer:" + importerCommand)
-        os.system("\"" + importerCommand + "\"")
+# it just divide lines to process, not balanced control
+if __name__ == '__main__':   
 
-        # If it's not a texture Bfres, run the exporter
-        inputXMLPath = os.path.join(fileGroupSubPath, fileNameNoExt + ".xml")
-        if not sbfresFile.endswith(".Tex1.sbfres"):
-            if not sbfresFile.endswith(".Tex2.sbfres"):
-                #print("Input XML Path = " + inputXMLPath)
-                outputFBXPath = fileGroupSubPath + "/"
-                #print("Export Path" + outputFBXPath)
-                exporterCommand = "\"" + exporterFP + "\" \"" + inputXMLPath + \
-                    "\" \"" + outputFBXPath + "\"" + writeTextures
-                os.system("\"" + exporterCommand + "\"")
-                # Throw an error if an FBX is not written
-                outputFBXFilename = os.path.splitext(
-                    os.path.basename(inputXMLPath))[0]
-                if not os.path.exists(os.path.join(outputFBXPath, outputFBXFilename + ".fbx")):
-                    with open('log.csv', 'a+') as logFile:
-                        logFile.write("\n" + outputFBXFilename +
-                                      ";-1;Fbx file failed to write.")
+    mgr = Manager()
+    share_context_progress = mgr.Value('i', 0)
+    share_context_total = mgr.Value('i', 0)
 
-        #os.system("xcopy /y \"" + inputXMLPath + "\" \"" +
-        #          os.path.join(fileGroupSubPath, "XMLDumps", "\""))
-        os.system("del /q \"" + inputXMLPath + "\"")
+    # step1. extract pack
+    for pack in sorted(os.listdir(global_pack_dir)):
+        purename = os.path.splitext(pack)[0]
+        if pack.endswith(".pack") and not os.path.exists(os.path.join(global_pack_dir, purename)):
+            os.system("sarc extract {}".format( os.path.join(global_pack_dir, pack) ))
+
+    # step2. move sbfres to In
+    for root, dir, file in os.walk(global_pack_dir):
+        for f in file:
+            if f.endswith(".sbfres"):
+                print('moving {}...'.format(f))
+                shutil.move(os.path.join(root, f), global_in_dir)
+
+    # step3. -xx, sub pack rename
+    for sbfresFile in sorted(os.listdir(global_in_dir)):
+        if( re.match(".*-[0-9][0-9].sbfres", sbfresFile) ):
+            new_text = re.sub("-", "_", sbfresFile)
+            os.rename(os.path.join(global_in_dir, sbfresFile), os.path.join(global_in_dir, new_text))
+
+    # step4. prepare tasks
+    lines = []
+    for sbfresFile in sorted(os.listdir(global_in_dir)):
+        if sbfresFile.endswith(".sbfres"):		
+            fileNameNoExt = sbfresFile[0:len(sbfresFile) - len(".sbfres")]
+            # Set file group name
+            if sbfresFile.endswith("_Animation.sbfres"):
+                fileGroupName = sbfresFile[0:len(
+                    sbfresFile) - len("_Animation.sbfres")]
+            elif sbfresFile.endswith(".Tex1.sbfres"):
+                fileGroupName = sbfresFile[0:len(sbfresFile) - len(".Tex1.sbfres")]
+            elif sbfresFile.endswith(".Tex2.sbfres"):
+                fileGroupName = sbfresFile[0:len(sbfresFile) - len(".Tex2.sbfres")]
+                continue
+            elif( re.match(".*_[0-9][0-9].sbfres", sbfresFile) ):
+                fileGroupName = sbfresFile[0:len(sbfresFile) - 10]
+            else:
+                fileGroupName = sbfresFile[0:len(sbfresFile) - len(".sbfres")]
+
+            # If Armor_ or Weapon_, skip
+            if fileGroupName.startswith("DgnMrgPrt_") or fileGroupName.startswith("Demo") or fileGroupName.startswith("Armor_") or fileGroupName.startswith("Weapon_") or fileGroupName.startswith("Player") or fileGroupName.startswith("UMii_"):
+                continue
+
+            # Create filegroup subdirectory
+            fileGroupSubPath = os.path.join(global_out_dir, fileGroupName)
+            
+            if not os.path.exists(fileGroupSubPath):
+                os.makedirs(fileGroupSubPath)
+
+            task_count = len(lines)
+            lines.append((fileGroupSubPath, sbfresFile, fileNameNoExt, share_context_progress, share_context_total))
+
+    if not os.access(global_in_dir, os.F_OK):
+        os.mkdir(global_in_dir)
+    if not os.access(global_out_dir, os.F_OK):
+        os.mkdir(global_out_dir)
+
+    global_total_tasks = len(lines)
+    share_context_progress.value = 0
+    share_context_total.value = global_total_tasks
+    print( "{} tasks use {} cores".format(global_total_tasks, PROCESS_MAX) )
+    
+    pool = Pool(PROCESS_MAX)
+    results = pool.map(SingleTask, lines)
+    pool.close()
+    pool.join()
+
+    print('all tasks taken: {:.2f} seconds.'.format(time.time() - global_start_time) )

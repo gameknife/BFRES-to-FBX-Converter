@@ -87,26 +87,8 @@ bool SaveDocument(FbxManager* pManager, FbxDocument* pDocument, const char* pFil
 // Parse any flags after the initial mandatory arguments
 void ParseArguments( int argc, char**& argv )
 {
+    FBXWriter::g_bWriteTextures = true;
     medianFilePath.assign( argv[ 1 ] );
-    uint32 counter = 0;
-    while (counter < argc)
-    {
-        std::cout << "Argument " << counter << " is " << argv[ counter++ ] << "\n";
-    }
-
-    for (uint32 i = 3; i < argc; i++)
-    {
-        std::string argument = argv[ i ];
-        std::cout << "ARGUMENT NUMBER " << i << " IS EQUAL TO " << argv[ i ];
-        if ( argument == "-t")
-        {
-            FBXWriter::g_bWriteTextures = true;
-        }
-        else
-        {
-            assert( 0, "Invalid flag. Please use '[program.exe] [inputfile] [outputFolder] [flags]' where the flag 't' is to write textures into the FBX" );
-        }
-    }
 }
 
 
@@ -115,22 +97,11 @@ void ParseArguments( int argc, char**& argv )
 int main( int argc, char* argv[] )
 {
     // If there are no arguments, assume this is debugging and use the debugging filepath
-    if (argc == 1)
-	{
-        medianFilePath = MEDIAN_FILE_DIR;
-		medianFilePath.append("Npc_Gerudo_Queen.xml");
-    }
-    else
-    {
-        ParseArguments( argc, argv );
-
-    }
+    ParseArguments( argc, argv );
 
 	uint32 lastIndex = medianFilePath.find_last_of(".");
     uint32 lastSlashIndex = medianFilePath.find_last_of("\\");
     std::string fileName = medianFilePath.substr(lastSlashIndex + 1, lastIndex - lastSlashIndex - 1);
-
-
     
     BFRESStructs::BFRES* bfres = g_BFRESManager.GetBFRES();
     XML::XmlParser::Parse(medianFilePath.c_str(), *bfres);
@@ -204,17 +175,18 @@ int main( int argc, char* argv[] )
         }
 
         FbxSystemUnit::cm.ConvertScene( pScene, lConversionOptions );
-        string SingleFbxPath = fbxExportPath + bfres->fska.anims[0].m_szName + "_Animation.fbx";
+        // this name will import as asset name prefix to ue, so we should care about it
+
+        // some animation may comes from mdl file, filename without Animation, add it
+        
+        if( fileName.find("_Animation") == std::string::npos )
+        {
+            fileName += "_Mdl_Animation";
+        }
+        //string SingleFbxPath = fbxExportPath + bfres->fska.anims[0].m_szName + "_Animation";
+        string SingleFbxPath = fbxExportPath + fileName;
         SaveDocument(lSdkManager, pScene, SingleFbxPath.c_str());
     }
-
-
-	//std::cout << pScene->GetMemberCount() << "\n\n";
-    
-   
-        
-   
-    
 
     return 0;
 }
