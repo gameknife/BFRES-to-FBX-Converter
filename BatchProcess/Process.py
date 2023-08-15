@@ -1,13 +1,14 @@
 import os
 import shutil
 import re
+import multiprocessing
 from multiprocessing import Pool, Manager
 from multiprocessing.sharedctypes import Value
 import time
 
-PROCESS_MAX = 24
+PARRALEL = True
+PROCESS_MAX = multiprocessing.cpu_count()
 
-SKIP_EXIST = True
 global_start_time = time.time()
 global_initial_working_dir = os.getcwd()
 global_config_type = "Release"
@@ -16,9 +17,6 @@ global_in_dir = os.path.join(global_initial_working_dir, "In\\")
 global_out_dir = os.path.join(global_initial_working_dir, "Out\\")
 global_pack_dir = os.path.join(global_initial_working_dir, "Pack\\")
 
-global_total_tasks = 0
-global_passed_tasks = 0
-
 global_importer_bin = os.path.join(global_initial_working_dir, "Importer", global_config_type, "BFRESImporter.exe")
 global_exporter_bin = os.path.join(global_initial_working_dir, "Exporter", global_config_type, "FBXExporter.exe")
 
@@ -26,12 +24,12 @@ def SingleTask(param) :
     fileGroupSubPath : str = param[0]
     sbfresFile : str = param[1]
     fileNameNoExt : str = param[2]
+
     share_context_progress : Value = param[3]
     share_context_total : Value = param[4]
-
     share_context_progress.value = share_context_progress.value + 1
-
     print("[{}/{}] {}".format( share_context_progress.value, share_context_total.value, sbfresFile) )
+
     importerCommand = "\"" + global_importer_bin + "\" \"" + \
         os.path.join(global_in_dir, sbfresFile) + "\" \"" + \
         fileGroupSubPath + "/\""
@@ -55,6 +53,13 @@ if __name__ == '__main__':
     share_context_progress = mgr.Value('i', 0)
     share_context_total = mgr.Value('i', 0)
 
+    if not os.access(global_in_dir, os.F_OK):
+        os.mkdir(global_in_dir)
+    if not os.access(global_out_dir, os.F_OK):
+        os.mkdir(global_out_dir)
+    if not os.access(global_pack_dir, os.F_OK):
+        os.mkdir(global_pack_dir)
+
     # step0. remove empty dir in Out
     for root, dir, file in os.walk(global_out_dir):
         if not file and not dir:
@@ -73,11 +78,11 @@ if __name__ == '__main__':
                 print('moving {}...'.format(f))
                 shutil.move(os.path.join(root, f), global_in_dir)
 
-    # step3. -xx, sub pack rename, Item_ exception
-    for sbfresFile in sorted(os.listdir(global_in_dir)):
-        if( re.match(".*-[0-9][0-9].sbfres", sbfresFile) and not sbfresFile.startswith("Item_") ):
-            new_text = re.sub("-", "_", sbfresFile)
-            os.rename(os.path.join(global_in_dir, sbfresFile), os.path.join(global_in_dir, new_text))
+    # step3. -xx, sub pack rename, Item_ exception, remove this logic, -xx is partial one, but _xx isnot
+    # for sbfresFile in sorted(os.listdir(global_in_dir)):
+    #     if( re.match(".*-[0-9][0-9].sbfres", sbfresFile) and not sbfresFile.startswith("Item_") ):
+    #         new_text = re.sub("-", "_", sbfresFile)
+    #         os.rename(os.path.join(global_in_dir, sbfresFile), os.path.join(global_in_dir, new_text))
 
     # step4. prepare tasks
     lines = []
@@ -93,7 +98,7 @@ if __name__ == '__main__':
             elif sbfresFile.endswith(".Tex2.sbfres"):
                 fileGroupName = sbfresFile[0:len(sbfresFile) - len(".Tex2.sbfres")]
                 continue
-            elif( re.match(".*_[0-9][0-9].sbfres", sbfresFile) ):
+            elif( re.match(".*-[0-9][0-9].sbfres", sbfresFile) ):
                 fileGroupName = sbfresFile[0:len(sbfresFile) - 10]
             else:
                 fileGroupName = sbfresFile[0:len(sbfresFile) - len(".sbfres")]
@@ -107,26 +112,21 @@ if __name__ == '__main__':
             
             if not os.path.exists(fileGroupSubPath):
                 os.makedirs(fileGroupSubPath)
-            else:
-                if SKIP_EXIST:
-                    continue
 
             task_count = len(lines)
             lines.append((fileGroupSubPath, sbfresFile, fileNameNoExt, share_context_progress, share_context_total))
 
-    if not os.access(global_in_dir, os.F_OK):
-        os.mkdir(global_in_dir)
-    if not os.access(global_out_dir, os.F_OK):
-        os.mkdir(global_out_dir)
-
-    global_total_tasks = len(lines)
     share_context_progress.value = 0
-    share_context_total.value = global_total_tasks
-    print( "{} tasks use {} cores".format(global_total_tasks, PROCESS_MAX) )
+    share_context_total.value = len(lines)
+    print( "{} tasks use {} cores".format(share_context_total.value, PROCESS_MAX if PARRALEL else 1) )
     
-    pool = Pool(PROCESS_MAX)
-    results = pool.map(SingleTask, lines)
-    pool.close()
-    pool.join()
+    if PARRALEL:
+        pool = Pool(PROCESS_MAX)
+        results = pool.map(SingleTask, lines)
+        pool.close()
+        pool.join()
+    else:
+        results = map(SingleTask, lines)
+        list(results)
 
     print('all tasks taken: {:.2f} seconds.'.format(time.time() - global_start_time) )
