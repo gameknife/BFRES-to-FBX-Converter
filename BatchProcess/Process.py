@@ -9,6 +9,11 @@ import time
 PARRALEL = True
 PROCESS_MAX = multiprocessing.cpu_count()
 
+prefix_filters = [
+    # "FldObj_",
+    # "TwnObj_",
+]
+
 global_start_time = time.time()
 global_initial_working_dir = os.getcwd()
 global_config_type = "Release"
@@ -44,7 +49,7 @@ def SingleTask(param) :
                 "\" \"" + outputFBXPath + "\"" + " -t"
             os.system("\"" + exporterCommand + "\"")
 
-    os.system("del /q \"" + inputXMLPath + "\"")
+    #os.system("del /q \"" + inputXMLPath + "\"")
 
 # it just divide lines to process, not balanced control
 if __name__ == '__main__':   
@@ -104,8 +109,19 @@ if __name__ == '__main__':
                 fileGroupName = sbfresFile[0:len(sbfresFile) - len(".sbfres")]
 
             # If Armor_ or Weapon_, skip
-            if fileGroupName.startswith("DgnMrgPrt_") or fileGroupName.startswith("Demo") or fileGroupName.startswith("Armor_") or fileGroupName.startswith("Weapon_") or fileGroupName.startswith("Player") or fileGroupName.startswith("UMii_"):
+            if fileGroupName.startswith("Demo") or fileGroupName.startswith("Armor_") or fileGroupName.startswith("Weapon_") or fileGroupName.startswith("Player") or fileGroupName.startswith("UMii_"):
                 continue
+
+            # If prefix filter, skip
+            if len(prefix_filters) > 0:
+                included = False
+                for prefix_filter in prefix_filters:
+                    if fileGroupName.startswith(prefix_filter):
+                        included = True
+                        break
+
+                if not included:
+                    continue
 
             # Create filegroup subdirectory
             fileGroupSubPath = os.path.join(global_out_dir, fileGroupName)
