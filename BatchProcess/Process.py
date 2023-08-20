@@ -100,6 +100,8 @@ if __name__ == '__main__':
                     sbfresFile) - len("_Animation.sbfres")]
             elif sbfresFile.endswith(".Tex1.sbfres"):
                 fileGroupName = sbfresFile[0:len(sbfresFile) - len(".Tex1.sbfres")]
+            elif sbfresFile.endswith(".Tex1.1.sbfres"):
+                fileGroupName = sbfresFile[0:len(sbfresFile) - len(".Tex1.1.sbfres")]
             elif sbfresFile.endswith(".Tex2.sbfres"):
                 fileGroupName = sbfresFile[0:len(sbfresFile) - len(".Tex2.sbfres")]
                 continue
