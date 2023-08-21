@@ -56,7 +56,7 @@ public:
     // Model shit
     void WriteModel( FbxScene*& pScene, const FMDL& fmdl, uint32 fmdlIndex, bool onlySkeleton );
     void WriteSkeleton(FbxScene*& pScene, const FSKL& fskl, std::vector<BoneMetadata>& boneListInfos);
-    void WriteShape(FbxScene*& pScene, const FSHP& fshp, std::vector<BoneMetadata>& boneListInfos, uint32 fmdlIndex);
+    void WriteShape(FbxScene*& pScene, const FMDL& mdl,  const FSHP& fshp, std::vector<BoneMetadata>& boneListInfos, uint32 fmdlIndex);
     void WriteMesh(FbxSurfacePhong* lMaterial, FbxScene*& pScene, FbxNode*& pLodGroup, const FSHP& fshp, const LODMesh& lodMesh, std::vector<BoneMetadata>& boneListInfos, uint32 fmdlIndex);
     void SetTexturesToMaterial(FbxScene*& pScene, FMAT* fmat, FbxSurfacePhong* lMaterial);
 

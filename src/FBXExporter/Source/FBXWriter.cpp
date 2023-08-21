@@ -168,7 +168,7 @@ void FBXWriter::WriteModel(FbxScene*& pScene, const FMDL& fmdl, uint32 fmdlIndex
     {
         for (uint32 i = 0; i < fmdl.fshps.size(); i++)
         {
-            WriteShape(pScene, fmdl.fshps[i], boneInfoList, fmdlIndex);
+            WriteShape(pScene, fmdl, fmdl.fshps[i], boneInfoList, fmdlIndex);
         }
     }
 }
@@ -269,7 +269,7 @@ void FBXWriter::CreateBone(FbxScene*& pScene, const Bone& bone, FbxNode*& lBoneN
 
 // -----------------------------------------------------------------------
 // -----------------------------------------------------------------------
-void FBXWriter::WriteShape(FbxScene*& pScene, const FSHP& fshp, std::vector<BoneMetadata>& boneListInfos, uint32 fmdlIndex)
+void FBXWriter::WriteShape(FbxScene*& pScene, const FMDL& mdl, const FSHP& fshp, std::vector<BoneMetadata>& boneListInfos, uint32 fmdlIndex)
 {
     std::string meshName = fshp.name + "_LODGroup";
     FbxNode* lLodGroup = FbxNode::Create(pScene, meshName.c_str());
@@ -279,12 +279,16 @@ void FBXWriter::WriteShape(FbxScene*& pScene, const FSHP& fshp, std::vector<Bone
     // create the single material
     FMAT* fmat = g_BFRESManager.GetMaterialByIndex(fshp.modelIndex, fshp.materialIndex);
 
-    std::string matName = fmat->name;
+    // currently we found fmat with same name but different value
+    // so just add model index to name
+    char buff[999];
+    snprintf(buff, sizeof(buff), "%s_%s", fmat->name.c_str(), mdl.name.c_str());
+    std::string matName = buff;
 
     // add or get from materialmap
     if (g_MaterialMap.find(matName) == g_MaterialMap.end())
     {
-        FbxString lMaterialName = fmat->name.c_str();
+        FbxString lMaterialName = matName.c_str();
         FbxSurfacePhong* lMaterial = FbxSurfacePhong::Create(pScene, lMaterialName);
 
         if (g_bWriteTextures)
