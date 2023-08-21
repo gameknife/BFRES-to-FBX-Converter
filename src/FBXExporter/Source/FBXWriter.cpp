@@ -393,8 +393,10 @@ void FBXWriter::WriteMesh(FbxSurfacePhong* lMaterial, FbxScene*& pScene, FbxNode
         const Math::vector4F& binormalVec = fshp.vertices[i].binormal;
         lLayerElementBinormal->GetDirectArray().Add(FbxVector4(binormalVec.X, binormalVec.Y, binormalVec.Z, binormalVec.W));
 
+        // zelda use vertex color 0/1 alpha channel to blend textures, but ue only support 1 layer vcolor, so write color1 alpha to 
         const Math::vector4F& col0Vec = fshp.vertices[i].color0;
-        lLayerElementCol0->GetDirectArray().Add(FbxVector4(col0Vec.X, col0Vec.Y, col0Vec.Z, col0Vec.W));
+        const Math::vector4F& col1Vec = fshp.vertices[i].color1;
+        lLayerElementCol0->GetDirectArray().Add(FbxVector4(col0Vec.X, col0Vec.Y, col1Vec.W, col0Vec.W));
 
         if (hasSkeleton)
             CreateSkinClusterData(fshp.vertices[i], i, SkinClusterMap, boneListInfos, fshp); // Convert the vertex-to-bone mapping to bone-to-vertex so it conforms with fbx cluster data
