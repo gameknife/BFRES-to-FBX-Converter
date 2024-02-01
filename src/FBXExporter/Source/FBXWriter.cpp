@@ -282,7 +282,9 @@ void FBXWriter::WriteShape(FbxScene*& pScene, const FMDL& mdl, const FSHP& fshp,
     // currently we found fmat with same name but different value
     // so just add model index to name
     char buff[999];
-    snprintf(buff, sizeof(buff), "%s_%s", fmat->name.c_str(), mdl.name.c_str());
+    // do not contain the mdl name
+    //snprintf(buff, sizeof(buff), "%s_%s", fmat->name.c_str(), mdl.name.c_str());
+    snprintf(buff, sizeof(buff), "%s", fmat->name.c_str());
     std::string matName = buff;
 
     // add or get from materialmap
